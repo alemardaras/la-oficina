@@ -184,6 +184,53 @@
   .spark { vertical-align: middle; }
   h4 { font: 800 22px var(--display); margin: 22px 0 6px; }
 
+  /* ---------- talón ---------- */
+  .agregar { margin-top: 16px; background: var(--text); color: var(--panel); border: 0; border-radius: 6px;
+             padding: 9px 14px; font-weight: 700; cursor: pointer; }
+  .agregar.ya { background: none; color: var(--text); box-shadow: inset 0 0 0 1.5px var(--text); }
+  .talon-boton { position: fixed; right: 18px; bottom: 18px; z-index: 20; display: flex; align-items: center; gap: 10px;
+                 background: var(--amarilla); color: #14231a; border: 0; border-radius: 999px; padding: 11px 18px 11px 20px;
+                 font: 800 20px var(--display); cursor: pointer; box-shadow: 0 6px 18px rgba(10, 30, 15, .28); }
+  .talon-boton .n { background: #14231a; color: var(--amarilla); border-radius: 999px; min-width: 26px; height: 26px;
+                    display: grid; place-items: center; font-size: 16px; padding: 0 7px; }
+  @media (prefers-reduced-motion: no-preference) { .talon-boton.pulso { animation: pulso .45s ease-out; }
+    @keyframes pulso { 40% { transform: scale(1.12); } } }
+  .talon { position: fixed; right: 18px; bottom: 78px; z-index: 21; width: min(420px, calc(100vw - 36px));
+           max-height: calc(100vh - 110px); overflow-y: auto; background: var(--panel); color: var(--text);
+           border: 1.5px solid var(--text); border-radius: 10px; box-shadow: 0 14px 40px rgba(10, 30, 15, .3); }
+  .talon[hidden] { display: none; }
+  .talon header { position: sticky; top: 0; background: var(--panel); padding: 14px 16px 10px; display: flex;
+                  align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 2px solid var(--text); z-index: 1; }
+  .talon h2 { margin: 0; font: 900 34px/1 var(--display); }
+  .talon header .cerrar { background: none; border: 0; font-size: 14px; color: var(--text-2); cursor: pointer; text-decoration: underline; }
+  .seleccion { padding: 14px 16px 12px; border-bottom: 2px dashed var(--border); position: relative; }
+  .seleccion .quien { font: 800 22px/1.05 var(--display); padding-right: 64px; }
+  .seleccion .donde { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+  .seleccion .linea { margin-top: 8px; font-weight: 700; }
+  .seleccion .quitar { position: absolute; top: 14px; right: 14px; background: none; border: 0; color: var(--text-2);
+                       font-size: 13px; cursor: pointer; text-decoration: underline; }
+  .seleccion .datos { display: flex; gap: 18px; align-items: flex-end; margin-top: 6px; flex-wrap: wrap; }
+  .seleccion .datos .v { font: 900 30px/1 var(--display); }
+  .seleccion .datos .v.chica { font-size: 22px; }
+  .seleccion .datos .k { font-size: 12px; color: var(--text-2); }
+  .seleccion svg { display: block; width: 100%; height: auto; margin-top: 10px; }
+  .seleccion svg text { fill: var(--text-2); font: 11px var(--ui); }
+  .seleccion svg text.val { fill: var(--text); font-weight: 700; }
+  .talon .pie { padding: 14px 16px 16px; background: var(--bg); }
+  .talon .pie .total { display: flex; gap: 22px; align-items: flex-end; }
+  .talon .pie .v { font: 900 34px/1 var(--display); }
+  .talon .pie .k { font-size: 12px; color: var(--text-2); }
+  .talon .pie p { font-size: 12px; color: var(--text-2); margin: 10px 0 12px; }
+  .talon .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+  .talon .acciones button, .talon .acciones a { border: 1.5px solid var(--text); background: none; color: var(--text);
+            border-radius: 6px; padding: 7px 12px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 14px; }
+  .talon .acciones .principal { background: var(--text); color: var(--panel); }
+  .talon .vacio { padding: 24px 16px; }
+  @media (max-width: 860px) {
+    .talon { inset: 0; width: auto; max-height: none; border-radius: 0; border: 0; }
+    .talon-boton { right: 14px; bottom: 14px; }
+  }
+
   /* Panel del jugador dentro de la tabla (celular): se abre debajo del jugador tocado */
   tr.panel-fila td { white-space: normal; text-align: left; padding: 0; background: var(--panel); }
   tr.panel-fila .jugador { margin: 0; padding: 14px 4px 18px; border-top: 0; border-bottom: 3px solid var(--text); }
@@ -262,6 +309,8 @@
   <main id="detalle"><div class="vacio">Elegí un partido de la lista para ver la forma de cada jugador.</div></main>
 </div>
 <div class="tip" id="tip"></div>
+<button class="talon-boton" id="abrirTalon" aria-controls="talon" aria-expanded="false">Talón <span class="n" id="talonN">0</span></button>
+<div class="talon" id="talon" role="dialog" aria-label="Talón" hidden></div>
 <script>
 // Datos: API pública de ESPN, pedida directamente desde el navegador.
 const API = "https://site.api.espn.com/apis/site/v2";
@@ -806,6 +855,7 @@ async function pintarJugador(j) {
     if (!sel.length) { cont.innerHTML = `<div><h3>${esc(j.nombre)}</h3></div><div class="vacio">No jugó partidos con estos filtros.</div>`; return; }
     const angosto = window.matchMedia("(max-width: 760px)").matches;
     const { svg, orden } = graficoBarras(sel, angosto ? cont.clientWidth : cont.clientWidth - 248);
+    ultimoPanel = { j, sel, r };
     const otros = sel.some(p => p.otroEquipo);
     const nota = cargandoOtros ? "Buscando también sus partidos con otros equipos…"
       : otros ? "Incluye sus partidos con otros equipos (club o selección)." : "";
@@ -818,6 +868,7 @@ async function pintarJugador(j) {
           <div><div class="v">${r1(r.prom)}</div><div class="k">promedio</div></div>
           <div><div class="v">${Math.max(...sel.map(p => p.stats[vista.stat] ?? 0))}</div><div class="k">máximo</div></div>
         </div>
+        ${cargandoOtros ? "" : `<button class="agregar${enTalon(claveSeleccion(j.id)) ? " ya" : ""}" data-agregar>${enTalon(claveSeleccion(j.id)) ? "Actualizar en el talón" : "Agregar al talón"}</button>`}
       </div>
       <div>
         <p class="nota">${NOMBRE_STAT[vista.stat]} en sus últimos ${sel.length} partidos${vista.soloTitular ? " como titular" : ""}. ${nota}</p>
@@ -860,6 +911,143 @@ function activarTooltip(chart, orden) {
   });
 }
 
+// ---------- talón: selecciones guardadas con sus estadísticas ----------
+// Se guarda en el navegador (localStorage); si no está disponible, dura mientras la página esté abierta.
+const CLAVE_TALON = "laoficina.talon.v1";
+let talon = [], ultimoPanel = null;
+try { talon = JSON.parse(localStorage.getItem(CLAVE_TALON) || "[]"); } catch { talon = []; }
+const guardarTalon = () => { try { localStorage.setItem(CLAVE_TALON, JSON.stringify(talon)); } catch {} };
+const claveSeleccion = jugadorId => `${activo}|${jugadorId}|${vista.stat}|${vista.linea}`;
+const enTalon = clave => talon.some(s => s.clave === clave);
+const cuotaJusta = prob => prob > 0 ? (1 / prob).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "–";
+
+function agregarAlTalon() {
+  const p = partidos.find(x => x.id === activo);
+  if (!p || !ultimoPanel) return;
+  const { j, sel, r } = ultimoPanel;
+  const clave = claveSeleccion(j.id);
+  const seleccion = {
+    clave, jugador: j.nombre, pos: j.pos && j.pos !== "SUB" ? j.pos : "",
+    equipo: vista.lado === "home" ? p.local : p.visitante,
+    partido: { id: p.id, local: p.local, visitante: p.visitante, fecha: p.fecha, liga: p.liga_nombre },
+    stat: vista.stat, linea: vista.linea, soloTitular: vista.soloTitular,
+    pct: r.pct, sup: r.sup, n: r.n, prom: r.prom, max: Math.max(...sel.map(x => x.stats[vista.stat] ?? 0)),
+    valores: [...sel].reverse().map(x => ({ v: x.stats[vista.stat], fecha: x.fecha, rival: x.rival })),
+    agregado: new Date().toISOString(),
+  };
+  const i = talon.findIndex(s => s.clave === clave);
+  if (i >= 0) talon[i] = seleccion; else talon.push(seleccion);
+  guardarTalon();
+  pintarTalon();
+  const b = $("abrirTalon"); b.classList.remove("pulso"); void b.offsetWidth; b.classList.add("pulso");
+  const btn = document.querySelector("[data-agregar]");
+  if (btn) { btn.textContent = "En el talón"; btn.classList.add("ya"); }
+}
+
+function barrasTalon(valores, linea) {
+  const W = 360, H = 88, base = 50, alto = 42;
+  const max = Math.max(linea + 0.5, ...valores.map(x => x.v ?? 0));
+  const band = W / Math.max(valores.length, 1), bw = Math.min(18, band * 0.6);
+  let g = "";
+  valores.forEach((x, i) => {
+    const v = x.v ?? 0, h = Math.max((v / max) * alto, 2), bx = i * band + (band - bw) / 2;
+    g += `<rect x="${bx}" y="${base - h}" width="${bw}" height="${h}" rx="2" fill="var(${v > linea ? "--hit" : "--miss"})">
+            <title>${esc(fmtLarga.format(new Date(x.fecha)))}, contra ${esc(x.rival)}: ${x.v ?? "sin dato"}</title></rect>
+          <text class="val" x="${i * band + band / 2}" y="${base + 15}" text-anchor="middle">${x.v ?? "–"}</text>`;
+  });
+  const ly = base - (linea / max) * alto;
+  g += `<line x1="0" x2="${W}" y1="${ly}" y2="${ly}" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="0" y="${H - 2}">← más antiguo</text><text x="${W}" y="${H - 2}" text-anchor="end">más reciente →</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Últimos valores: ${valores.map(x => x.v ?? "sin dato").join(", ")}">${g}</svg>`;
+}
+
+function textoTalon() {
+  const prob = talon.reduce((a, s) => a * (s.pct ?? 0), 1);
+  return ["La Oficina, talón", ""].concat(talon.map((s, i) =>
+    `${i + 1}. ${s.jugador} (${s.equipo}) más de ${r1(s.linea)} ${NOMBRE_STAT[s.stat].toLowerCase()}\n` +
+    `   ${s.partido.local} vs ${s.partido.visitante}, ${fmtDia.format(new Date(s.partido.fecha))}\n` +
+    `   Superó la línea en ${s.sup} de ${s.n} (${Math.round(s.pct * 100)}%), promedio ${r1(s.prom)}, cuota justa ${cuotaJusta(s.pct)}\n` +
+    `   Últimos: ${s.valores.map(x => x.v ?? "–").join(" ")}`))
+    .concat(talon.length > 1 ? ["", `Combinada: ${Math.round(prob * 100)}% histórico, cuota justa ${cuotaJusta(prob)}`] : [])
+    .join("\n");
+}
+
+function pintarTalon() {
+  $("talonN").textContent = talon.length;
+  const cont = $("talon");
+  if (cont.hidden) return;
+  if (!talon.length) {
+    cont.innerHTML = `<header><h2>Talón</h2><button class="cerrar" data-cerrar>Cerrar</button></header>
+      <div class="vacio">Tu talón está vacío. Abrí un partido, tocá un jugador y usá “Agregar al talón”: se guarda con la estadística y la línea que estés mirando.</div>`;
+    return;
+  }
+  const prob = talon.reduce((a, s) => a * (s.pct ?? 0), 1);
+  const hoy = isoLocal(new Date());
+  cont.innerHTML = `<header><h2>Talón</h2><span class="sup">${talon.length} ${talon.length === 1 ? "selección" : "selecciones"}</span>
+      <button class="cerrar" data-cerrar>Cerrar</button></header>
+    ${talon.map((s, i) => {
+      const f = new Date(s.partido.fecha);
+      const cuando = isoLocal(f) === hoy ? `hoy a las ${fmtHora.format(f)}` : `${fmtDia.format(f)} a las ${fmtHora.format(f)}`;
+      return `<div class="seleccion">
+        <div class="quien">${esc(s.jugador)}</div>
+        <div class="donde">${esc(s.equipo)}${s.pos ? `, ${esc(s.pos)}` : ""}. ${esc(s.partido.local)} vs ${esc(s.partido.visitante)}, ${esc(cuando)}</div>
+        <button class="quitar" data-quitar="${i}">Quitar</button>
+        <div class="linea">Más de ${r1(s.linea)} ${NOMBRE_STAT[s.stat].toLowerCase()}${s.soloTitular ? " (partidos como titular)" : ""}</div>
+        <div class="datos">
+          <div><div class="v">${Math.round(s.pct * 100)}%</div><div class="k">superó en ${s.sup} de ${s.n}</div></div>
+          <div><div class="v chica">${r1(s.prom)}</div><div class="k">promedio</div></div>
+          <div><div class="v chica">${s.max}</div><div class="k">máximo</div></div>
+          <div><div class="v chica">${cuotaJusta(s.pct)}</div><div class="k">cuota justa</div></div>
+        </div>
+        ${barrasTalon(s.valores, s.linea)}
+      </div>`;
+    }).join("")}
+    <div class="pie">
+      ${talon.length > 1 ? `<div class="total">
+        <div><div class="v">${Math.round(prob * 100)}%</div><div class="k">histórico de la combinada</div></div>
+        <div><div class="v">${cuotaJusta(prob)}</div><div class="k">cuota justa de la combinada</div></div>
+      </div>
+      <p>Si bet365 paga más que la cuota justa, la apuesta tiene valor según el historial. El % de la combinada multiplica los de cada selección, como si fueran independientes; con jugadores del mismo partido puede no ser así.</p>`
+      : `<p>Si bet365 paga más que la cuota justa, la apuesta tiene valor según el historial de estos partidos.</p>`}
+      <div class="acciones">
+        <a class="principal" href="https://wa.me/?text=${encodeURIComponent(textoTalon())}" target="_blank" rel="noopener">Mandar por WhatsApp</a>
+        <button data-copiar>Copiar talón</button>
+        <button data-vaciar>Vaciar talón</button>
+      </div>
+    </div>`;
+}
+
+function abrirTalon(abrir) {
+  $("talon").hidden = !abrir;
+  $("abrirTalon").setAttribute("aria-expanded", String(abrir));
+  if (abrir) pintarTalon();
+}
+
+$("abrirTalon").addEventListener("click", () => abrirTalon($("talon").hidden));
+$("talon").addEventListener("click", async e => {
+  if (e.target.closest("[data-cerrar]")) { abrirTalon(false); return; }
+  const q = e.target.closest("[data-quitar]");
+  if (q) { talon.splice(+q.dataset.quitar, 1); guardarTalon(); pintarTalon(); refrescarBotonAgregar(); return; }
+  if (e.target.closest("[data-vaciar]")) {
+    if (confirm("¿Vaciar el talón? Se borran todas las selecciones.")) { talon = []; guardarTalon(); pintarTalon(); refrescarBotonAgregar(); }
+    return;
+  }
+  const c = e.target.closest("[data-copiar]");
+  if (c) {
+    try { await navigator.clipboard.writeText(textoTalon()); c.textContent = "Copiado"; }
+    catch { prompt("Copiá el talón:", textoTalon()); }
+  }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("talon").hidden) abrirTalon(false); });
+function refrescarBotonAgregar() {
+  const btn = document.querySelector("[data-agregar]");
+  if (!btn || !ultimoPanel) return;
+  const ya = enTalon(claveSeleccion(ultimoPanel.j.id));
+  btn.classList.toggle("ya", ya);
+  btn.textContent = ya ? "Actualizar en el talón" : "Agregar al talón";
+}
+pintarTalon();
+
 // ---------- eventos ----------
 $("lista").addEventListener("click", e => {
   const b = e.target.closest(".partido"); if (b) abrirPartido(b.dataset.id);
@@ -869,6 +1057,7 @@ $("destacados").addEventListener("click", e => {
 });
 $("detalle").addEventListener("click", e => {
   if (e.target.closest("[data-volver]")) { volverALista(); return; }
+  if (e.target.closest("[data-agregar]")) { agregarAlTalon(); return; }
   const tab = e.target.closest("[data-tab]");
   if (tab) { vista.tab = tab.dataset.tab; pintarDetalle(); return; }
   const lado = e.target.closest("[data-lado]");
