@@ -1071,12 +1071,20 @@ async function ponerMusica(prender) {
   catch { marcarMusica(false); $("musicaBtn").textContent = "No se pudo reproducir"; }
 }
 $("musicaBtn").addEventListener("click", e => { e.stopPropagation(); ponerMusica(musica.paused); });
-let prefMusica = "0";
-try { prefMusica = localStorage.getItem(CLAVE_MUSICA) || "0"; } catch {}
+// Prendida por defecto: intenta sonar al abrir; si el navegador lo bloquea, arranca con el primer toque.
+// Solo queda apagada si el usuario la pausó (preferencia "0").
+let prefMusica = "1";
+try { prefMusica = localStorage.getItem(CLAVE_MUSICA) ?? "1"; } catch {}
 if (prefMusica === "1") {
-  const arrancar = () => { if (musica.paused) ponerMusica(true); };
-  document.addEventListener("pointerdown", arrancar, { once: true });
-  document.addEventListener("keydown", arrancar, { once: true });
+  musica.preload = "auto";
+  const eventos = ["pointerdown", "keydown", "touchstart"];
+  const arrancar = e => {
+    eventos.forEach(ev => document.removeEventListener(ev, arrancar, true));
+    if (e?.target?.closest?.("#musicaBtn")) return;  // el botón ya maneja su propio clic
+    if (musica.paused) ponerMusica(true);
+  };
+  musica.play().then(() => marcarMusica(true))
+    .catch(() => eventos.forEach(ev => document.addEventListener(ev, arrancar, { capture: true, passive: true })));
 }
 
 // ---------- eventos ----------
