@@ -187,6 +187,31 @@
   .spark { vertical-align: middle; }
   h4 { font: 800 22px var(--display); margin: 22px 0 6px; }
 
+  /* ---------- alineaciones ---------- */
+  .xi { margin-bottom: 22px; }
+  .xi h4 { margin-top: 0; }
+  .campo, .campo-espera { display: block; width: 100%; height: auto; border-radius: 8px;
+    background:
+      radial-gradient(ellipse 80% 90% at 50% 40%, rgba(255, 252, 220, .10), transparent 70%),
+      repeating-linear-gradient(90deg, var(--pasto-1) 0, var(--pasto-2) 4.75%, var(--pasto-1) 9.5%,
+                                var(--pasto-3) 9.5%, var(--pasto-4) 14.25%, var(--pasto-3) 19%); }
+  .campo.medio, .campo-espera.medio { background:
+      radial-gradient(ellipse 80% 90% at 50% 40%, rgba(255, 252, 220, .10), transparent 70%),
+      repeating-linear-gradient(0deg, var(--pasto-1) 0, var(--pasto-2) 5.5%, var(--pasto-1) 11%,
+                                var(--pasto-3) 11%, var(--pasto-4) 16.5%, var(--pasto-3) 22%); }
+  .campo-espera { aspect-ratio: 1000 / 648; }
+  .campo-espera.medio { aspect-ratio: 648 / 820; }
+  .campo .tiza * { fill: none; stroke: #f7f9f4; stroke-width: 2.5; opacity: .75; }
+  .campo .ficha { cursor: pointer; }
+  .campo .ficha:focus-visible { outline: none; }
+  .campo .ficha:focus-visible circle:not([fill="none"]) { stroke: var(--amarilla); }
+  .campo text { font-family: var(--ui); paint-order: stroke; stroke: rgba(6, 26, 10, .55); stroke-width: 3px; stroke-linejoin: round; }
+  .campo text.dorsal { font-family: var(--display); font-weight: 800; stroke: none; }
+  .campo text.nombre { fill: #f7f9f4; font-weight: 700; }
+  .campo text.pctxi { fill: #f7f9f4; font-family: var(--display); font-weight: 800; }
+  .xi-notas { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--text-2); margin-top: 8px; }
+  .xi-notas b { color: var(--text); }
+
   /* ---------- talón ---------- */
   .agregar { margin-top: 16px; background: var(--text); color: var(--panel); border: 0; border-radius: 6px;
              padding: 9px 14px; font-weight: 700; cursor: pointer; }
@@ -551,13 +576,16 @@ function parsearResumen(id, d) {
     homeId: home.team?.id, awayId: away.team?.id, local: home.team?.displayName, visitante: away.team?.displayName,
     gl: home.score, gv: away.score, terminado: !!comp.status?.type?.completed,
   };
-  const filas = [], convocados = {};
+  const filas = [], convocados = {}, formaciones = {}, colores = {};
+  for (const c of cs) if (c.team?.id) colores[c.team.id] = [c.team.color, c.team.alternateColor];
   for (const eq of d.rosters || []) {
     const tid = eq.team.id;
     convocados[tid] = [];
+    formaciones[tid] = eq.formation || null;
     for (const p of eq.roster || []) {
       const aid = p.athlete.id;
-      convocados[tid].push({ id: aid, nombre: p.athlete.displayName, pos: p.position?.abbreviation, titular: !!p.starter });
+      convocados[tid].push({ id: aid, nombre: p.athlete.displayName, corto: p.athlete.shortName || p.athlete.displayName,
+        pos: p.position?.abbreviation, titular: !!p.starter, dorsal: p.jersey, lugar: +p.formationPlace || 99 });
       const st = Object.fromEntries((p.stats || []).map(s => [s.name, s.value]));
       if (!(p.starter || p.subbedIn || st.appearances > 0)) continue;
       const ini = p.starter ? 0 : entra[aid];
@@ -570,7 +598,7 @@ function parsearResumen(id, d) {
       filas.push(f);
     }
   }
-  return { meta, filas, convocados };
+  return { meta, filas, convocados, formaciones, colores };
 }
 
 function resumen(id, forzar = false) {
@@ -777,7 +805,9 @@ function filtrosHTML(p) {
 async function pintarPrevia(p) {
   const teamId = vista.lado === "home" ? p.homeId : p.awayId;
   const nombreEq = vista.lado === "home" ? p.local : p.visitante;
-  $("cuerpo").innerHTML = filtrosHTML(p) + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
+  $("cuerpo").innerHTML = `<section class="xi" id="alineacion"><h4>Alineaciones</h4><div class="campo-espera ${esAngosto() ? "medio" : ""}"></div></section>`
+    + filtrosHTML(p) + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
+  pintarAlineacion(p);
   const [forma, actual] = await Promise.all([formaEquipo(teamId, p.fecha, Math.max(vista.n, 10)), resumen(p.id).catch(() => null)]);
   if (activo !== p.id || vista.tab !== "previa" || (vista.lado === "home" ? p.homeId : p.awayId) !== teamId) return;
 
@@ -817,6 +847,159 @@ async function pintarPrevia(p) {
 
   $("previa").innerHTML = (enTabla ? "" : `<section class="jugador" id="panelJugador"></section>`) + tabla;
   pintarJugador(jugadores.get(vista.jugador));
+}
+
+// ---------- alineaciones en la cancha ----------
+// Profundidad (0 = arco propio) y costado (-1 izquierda … 1 derecha) según la posición de ESPN.
+function profundidad(pos = "") {
+  if (pos === "G") return 0;
+  if (/^(CD|SW)/.test(pos)) return 1;
+  if (/^(LB|RB)$/.test(pos)) return 1.1;
+  if (/WB/.test(pos)) return 1.8;
+  if (/^(DM|CDM)/.test(pos)) return 2.2;
+  if (/^(CM|LM|RM|M)/.test(pos)) return 3;
+  if (/^(AM|CAM)/.test(pos)) return 4;
+  if (/^(LW|RW|LF|RF)/.test(pos)) return 4.6;
+  if (/^(CF|F|ST|S)/.test(pos)) return 5;
+  return 3;
+}
+function costado(pos = "") {
+  if (/-L$/.test(pos)) return -0.5;
+  if (/-R$/.test(pos)) return 0.5;
+  if (/^L/.test(pos)) return -1;
+  if (/^R/.test(pos)) return 1;
+  return 0;
+}
+// Devuelve cada titular con d (0 arco propio → 1 mitad de cancha) y t (0 izquierda → 1 derecha del equipo).
+function ubicarXI(xi, formacion) {
+  const arquero = xi.find(j => j.pos === "G") || [...xi].sort((a, b) => a.lugar - b.lugar)[0];
+  const campo = xi.filter(j => j !== arquero)
+    .sort((a, b) => profundidad(a.pos) - profundidad(b.pos) || a.lugar - b.lugar);
+  let filas = (formacion || "").split("-").map(Number).filter(n => n > 0);
+  if (filas.reduce((a, b) => a + b, 0) !== campo.length) {
+    const grupos = new Map();
+    for (const j of campo) { const k = Math.round(profundidad(j.pos)); grupos.set(k, (grupos.get(k) || 0) + 1); }
+    filas = [...grupos.keys()].sort((a, b) => a - b).map(k => grupos.get(k));
+  }
+  const res = arquero ? [{ ...arquero, d: 0.03, t: 0.5 }] : [];
+  let i = 0;
+  filas.forEach((n, k) => {
+    const fila = campo.slice(i, i + n).sort((a, b) => costado(a.pos) - costado(b.pos)); i += n;
+    const d = filas.length === 1 ? 0.6 : 0.24 + k * (0.94 - 0.24) / (filas.length - 1);
+    fila.forEach((j, m) => res.push({ ...j, d, t: (m + 1) / (n + 1) }));
+  });
+  return res;
+}
+const colorTexto = hex => {
+  const n = parseInt(hex, 16); if (Number.isNaN(n)) return "#ffffff";
+  const [r, g, b] = [n >> 16, (n >> 8) & 255, n & 255];
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? "#14231a" : "#ffffff";
+};
+function coloresEquipos(colA, colB) {
+  const ok = c => /^[0-9a-f]{6}$/i.test(c || "");
+  const rgb = h => { const n = parseInt(h, 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  const lejos = (x, y) => { const [a, b] = [rgb(x), rgb(y)]; return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) > 130; };
+  const a = ok(colA?.[0]) ? colA[0] : "14231a";
+  const candidatos = [colB?.[0], colB?.[1], "f7f9f4", "14231a"].filter(ok);
+  return [a, candidatos.find(c => lejos(c, a)) || "f7f9f4"];
+}
+
+async function datosXI(p, teamId, forma, actual) {
+  let xi = (actual?.convocados?.[teamId] || []).filter(j => j.titular);
+  let formacion = actual?.formaciones?.[teamId], fuente = "confirmada";
+  if (xi.length < 11 && forma.partidos.length) {
+    const ult = forma.partidos[0];
+    const r = await resumen(ult.id).catch(() => null);
+    const t = (r?.convocados?.[teamId] || []).filter(j => j.titular);
+    if (t.length >= 11) {
+      xi = t; formacion = r.formaciones[teamId];
+      const rival = ult.homeId === teamId ? ult.visitante : ult.local;
+      fuente = `probable: la del último partido, contra ${rival} el ${fmtCorta.format(new Date(ult.fecha))}`;
+    }
+  }
+  if (xi.length < 11) return null;
+  const stats = j => {
+    const jj = forma.jugadores.get(j.id);
+    return jj ? resumenStat(filtrarPartidos(jj.partidos)) : null;
+  };
+  return { ubicados: ubicarXI(xi, formacion).map(j => ({ ...j, est: stats(j) })), formacion, fuente };
+}
+
+function lineasCancha(W, H, medio) {
+  const s = 1000 / 105;  // unidades por metro
+  const area = [16.5 * s, 40.3 * s], chica = [5.5 * s, 18.3 * s], r = 9.15 * s;
+  if (medio) {  // media cancha vertical, arco abajo
+    return `<rect x="4" y="4" width="${W - 8}" height="${H - 8}"/>
+      <line x1="4" y1="4" x2="${W - 4}" y2="4"/><path d="M${W / 2 - r} 4 A${r} ${r} 0 0 0 ${W / 2 + r} 4"/>
+      <rect x="${(W - area[1]) / 2}" y="${H - 4 - area[0]}" width="${area[1]}" height="${area[0]}"/>
+      <rect x="${(W - chica[1]) / 2}" y="${H - 4 - chica[0]}" width="${chica[1]}" height="${chica[0]}"/>
+      <path d="M${W / 2 - 7.3 * s} ${H - 4 - area[0]} A${r} ${r} 0 0 1 ${W / 2 + 7.3 * s} ${H - 4 - area[0]}"/>`;
+  }
+  return `<rect x="4" y="4" width="${W - 8}" height="${H - 8}"/>
+    <line x1="${W / 2}" y1="4" x2="${W / 2}" y2="${H - 4}"/><circle cx="${W / 2}" cy="${H / 2}" r="${r}"/>
+    <rect x="4" y="${(H - area[1]) / 2}" width="${area[0]}" height="${area[1]}"/>
+    <rect x="4" y="${(H - chica[1]) / 2}" width="${chica[0]}" height="${chica[1]}"/>
+    <rect x="${W - 4 - area[0]}" y="${(H - area[1]) / 2}" width="${area[0]}" height="${area[1]}"/>
+    <rect x="${W - 4 - chica[0]}" y="${(H - chica[1]) / 2}" width="${chica[0]}" height="${chica[1]}"/>
+    <path d="M${4 + area[0]} ${H / 2 - 7.3 * s} A${r} ${r} 0 0 1 ${4 + area[0]} ${H / 2 + 7.3 * s}"/>
+    <path d="M${W - 4 - area[0]} ${H / 2 - 7.3 * s} A${r} ${r} 0 0 0 ${W - 4 - area[0]} ${H / 2 + 7.3 * s}"/>`;
+}
+
+function fichaJugador(j, x, y, color, lado, escala, W) {
+  const tc = colorTexto(color), sel = j.id === vista.jugador;
+  const pct = j.est?.pct != null ? `${Math.round(j.est.pct * 100)}%` : "";
+  const r = 19 * escala, f = 15 * escala;
+  // nombres cerca del borde: alineados hacia adentro para que no se corten
+  const borde = 70 * escala;
+  const [tx, ancla] = x < borde ? [Math.max(8, x - r), "start"] : x > W - borde ? [Math.min(W - 8, x + r), "end"] : [x, "middle"];
+  return `<g class="ficha" data-xi="${esc(j.id)}" data-xi-lado="${lado}" tabindex="0" role="button" aria-label="${esc(j.nombre)}${pct ? `, ${pct}` : ""}">
+    ${sel ? `<circle cx="${x}" cy="${y}" r="${r + 6 * escala}" fill="none" stroke="var(--amarilla)" stroke-width="${4 * escala}"/>` : ""}
+    <circle cx="${x}" cy="${y}" r="${r}" fill="#${color}" stroke="#f7f9f4" stroke-width="${2.5 * escala}"/>
+    <text x="${x}" y="${y + 5 * escala}" text-anchor="middle" class="dorsal" style="fill:${tc};font-size:${f}px">${esc(j.dorsal ?? "")}</text>
+    <text x="${tx}" y="${y + r + 17 * escala}" text-anchor="${ancla}" class="nombre" style="font-size:${f}px">${esc(j.corto)}</text>
+    ${pct ? `<text x="${tx}" y="${y + r + 36 * escala}" text-anchor="${ancla}" class="pctxi" style="font-size:${f * 1.25}px">${pct}</text>` : ""}
+  </g>`;
+}
+
+async function pintarAlineacion(p) {
+  const n = Math.max(vista.n, 10);
+  try {
+    const [fh, fa, actual] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n), resumen(p.id).catch(() => null)]);
+    const [xh, xa] = await Promise.all([datosXI(p, p.homeId, fh, actual), datosXI(p, p.awayId, fa, actual)]);
+    const cont = $("alineacion");
+    if (!cont || activo !== p.id) return;
+    const [ch, ca] = coloresEquipos(actual?.colores?.[p.homeId], actual?.colores?.[p.awayId]);
+    const stat = NOMBRE_STAT[vista.stat].toLowerCase();
+    const nota = (nombre, x) => x ? `<span><b>${esc(nombre)}</b>${x.formacion ? ` ${esc(x.formacion)}` : ""}, ${esc(x.fuente)}</span>`
+                                  : `<span><b>${esc(nombre)}</b>: sin alineación disponible</span>`;
+    let svg;
+    if (esAngosto()) {  // celular: media cancha del equipo elegido
+      const x = vista.lado === "home" ? xh : xa, color = vista.lado === "home" ? ch : ca;
+      const W = 648, H = 820;
+      const fichas = x ? x.ubicados.map(j => fichaJugador(j, 50 + j.t * (W - 100), H - 92 - j.d * (H - 200), color, vista.lado, 1.4, W)).join("") : "";
+      svg = `<svg viewBox="0 0 ${W} ${H}" class="campo medio" role="group" aria-label="Alineación"><g class="tiza">${lineasCancha(W, H, true)}</g>${fichas}</svg>`;
+      cont.innerHTML = `<h4>Alineación</h4>${svg}<div class="xi-notas">${nota(vista.lado === "home" ? p.local : p.visitante, x)}</div>`;
+    } else {
+      const W = 1000, H = 648;
+      const fh2 = xh ? xh.ubicados.map(j => fichaJugador(j, 34 + j.d * 430, 52 + j.t * (H - 104), ch, "home", 1, W)).join("") : "";
+      const fa2 = xa ? xa.ubicados.map(j => fichaJugador(j, W - 34 - j.d * 430, H - 52 - j.t * (H - 104), ca, "away", 1, W)).join("") : "";
+      svg = `<svg viewBox="0 0 ${W} ${H}" class="campo" role="group" aria-label="Alineaciones"><g class="tiza">${lineasCancha(W, H, false)}</g>${fh2}${fa2}</svg>`;
+      cont.innerHTML = `<h4>Alineaciones</h4>${svg}<div class="xi-notas">${nota(p.local, xh)}${nota(p.visitante, xa)}</div>`;
+    }
+    cont.querySelector(".xi-notas").insertAdjacentHTML("beforeend", `<span>El % es cuántas veces superó ${r1(vista.linea)} ${stat} en sus últimos ${vista.n} partidos con su equipo. Tocá un jugador para ver su gráfico.</span>`);
+  } catch {
+    const cont = $("alineacion");
+    if (cont) cont.innerHTML = `<h4>Alineaciones</h4><div class="vacio">No se pudo traer la alineación de ESPN.</div>`;
+  }
+}
+
+function elegirDesdeCancha(g) {
+  const id = g.dataset.xi, lado = g.dataset.xiLado;
+  if (lado !== vista.lado) { vista.lado = lado; vista.jugador = id; pintarDetalle(); return; }
+  const fila = document.querySelector(`tr.fila[data-j="${CSS.escape(id)}"]`);
+  if (fila) elegirFila(fila); else { vista.jugador = id; pintarDetalle(); }
+  document.querySelectorAll("#alineacion .ficha").forEach(f => f.classList.toggle("elegida", f.dataset.xi === id));
+  const p = partidos.find(x => x.id === activo); if (p) pintarAlineacion(p);
 }
 
 let plantelActual = null;
@@ -1096,6 +1279,8 @@ $("destacados").addEventListener("click", e => {
 });
 $("detalle").addEventListener("click", e => {
   if (e.target.closest("[data-volver]")) { volverALista(); return; }
+  const ficha = e.target.closest(".ficha");
+  if (ficha) { elegirDesdeCancha(ficha); return; }
   if (e.target.closest("[data-agregar]")) { agregarAlTalon(); return; }
   const tab = e.target.closest("[data-tab]");
   if (tab) { vista.tab = tab.dataset.tab; pintarDetalle(); return; }
@@ -1113,6 +1298,8 @@ $("detalle").addEventListener("click", e => {
   if (fila) elegirFila(fila);
 });
 $("detalle").addEventListener("keydown", e => {
+  const ficha = e.target.closest?.(".ficha");
+  if (ficha && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); elegirDesdeCancha(ficha); return; }
   const fila = e.target.closest?.("tr.fila");
   if (fila && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); elegirFila(fila); }
 });
