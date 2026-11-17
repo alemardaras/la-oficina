@@ -84,6 +84,9 @@
             font-weight: 700; cursor: pointer; }
   .controles button:disabled { opacity: .6; cursor: default; }
   #estado { font-size: 13px; align-self: center; opacity: .9; }
+  .controles button.musica { margin-left: auto; background: rgba(6, 26, 10, .42); color: var(--cal);
+            border: 1.5px solid rgba(247, 249, 244, .6); border-radius: 999px; padding: 6px 14px; font-weight: 500; }
+  .controles button.musica[aria-pressed="true"] { background: var(--cal); color: #14231a; border-color: var(--cal); font-weight: 700; }
   .destacados { position: relative; display: flex; gap: 8px; margin-top: 14px; overflow-x: auto; padding-bottom: 2px;
                 scrollbar-width: none; }
   .destacados::-webkit-scrollbar { display: none; }
@@ -297,6 +300,8 @@
     <label>Ligas <select id="grupo"></select></label>
     <button id="cargar">Cargar partidos</button>
     <span id="estado" role="status"></span>
+    <button id="musicaBtn" class="musica" aria-pressed="false">Poner música</button>
+    <audio id="musica" src="cancion.mp3" loop preload="none"></audio>
   </div>
   <nav class="destacados" id="destacados" aria-label="Partidos destacados"></nav>
 </header>
@@ -1047,6 +1052,32 @@ function refrescarBotonAgregar() {
   btn.textContent = ya ? "Actualizar en el talón" : "Agregar al talón";
 }
 pintarTalon();
+
+// ---------- música de fondo ----------
+// Los navegadores no permiten sonar sin una acción del usuario: arranca con el botón,
+// o con el primer toque en la página si la última vez quedó prendida.
+const CLAVE_MUSICA = "laoficina.musica";
+const musica = $("musica");
+musica.volume = 0.35;
+function marcarMusica(sonando) {
+  $("musicaBtn").setAttribute("aria-pressed", String(sonando));
+  $("musicaBtn").textContent = sonando ? "Pausar música" : "Poner música";
+}
+async function ponerMusica(prender) {
+  try { localStorage.setItem(CLAVE_MUSICA, prender ? "1" : "0"); } catch {}
+  if (!prender) { musica.pause(); marcarMusica(false); return; }
+  $("musicaBtn").textContent = "Cargando música…";
+  try { await musica.play(); marcarMusica(true); }
+  catch { marcarMusica(false); $("musicaBtn").textContent = "No se pudo reproducir"; }
+}
+$("musicaBtn").addEventListener("click", e => { e.stopPropagation(); ponerMusica(musica.paused); });
+let prefMusica = "0";
+try { prefMusica = localStorage.getItem(CLAVE_MUSICA) || "0"; } catch {}
+if (prefMusica === "1") {
+  const arrancar = () => { if (musica.paused) ponerMusica(true); };
+  document.addEventListener("pointerdown", arrancar, { once: true });
+  document.addEventListener("keydown", arrancar, { once: true });
+}
 
 // ---------- eventos ----------
 $("lista").addEventListener("click", e => {
