@@ -184,10 +184,32 @@
   .spark { vertical-align: middle; }
   h4 { font: 800 22px var(--display); margin: 22px 0 6px; }
 
+  /* Panel del jugador dentro de la tabla (celular): se abre debajo del jugador tocado */
+  tr.panel-fila td { white-space: normal; text-align: left; padding: 0; background: var(--panel); }
+  tr.panel-fila .jugador { margin: 0; padding: 14px 4px 18px; border-top: 0; border-bottom: 3px solid var(--text); }
+  .volver { display: none; }
+  .cancha svg.cal-esquina { display: none; inset: 0 0 auto auto; width: 120px; height: 120px; }
+
   @media (max-width: 860px) {
     body { height: auto; }
     .layout { grid-template-columns: 1fr; }
-    aside { border-right: 0; border-bottom: 1px solid var(--border); max-height: 42vh; }
+    aside { border-right: 0; max-height: none; }
+    /* lista y partido en pantallas separadas */
+    body.ver-detalle aside { display: none; }
+    body:not(.ver-detalle) main { display: none; }
+    body.ver-detalle main { min-height: 100vh; }
+    .volver { display: inline-block; background: none; border: 1.5px solid var(--text); border-radius: 6px;
+              padding: 6px 12px; margin-bottom: 14px; cursor: pointer; font-weight: 700; }
+    /* en vez del círculo central, el arco del córner */
+    .cal .centro { display: none; }
+    .cancha svg.cal-esquina { display: block; }
+    /* la tabla del plantel entra en el ancho del teléfono */
+    .col-opc { display: none; }
+    table[data-tabla="plantel"] th, table[data-tabla="plantel"] td { padding: 8px 4px; }
+    table[data-tabla="plantel"] td:first-child { white-space: normal; min-width: 92px; padding-left: 6px; }
+    table[data-tabla="plantel"] td.pct small { display: none; }
+    tr.panel-fila td { max-width: calc(100vw - 32px); }
+    table[data-tabla="plantel"] th { white-space: normal; }
     main { padding: 18px 16px 32px; }
     .cancha { padding: 18px 16px 14px; }
     .controles label { flex: 1 1 140px; }
@@ -206,10 +228,16 @@
       </filter>
     </defs>
     <g filter="url(#tiza)">
-      <line x1="1060" y1="0" x2="1060" y2="220"/>
-      <circle class="circulo" cx="1060" cy="110" r="110"/>
-      <circle cx="1060" cy="110" r="4" style="fill: var(--cal); opacity: .72"/>
+      <line class="centro" x1="1060" y1="0" x2="1060" y2="220"/>
+      <circle class="centro circulo" cx="1060" cy="110" r="110"/>
+      <circle class="centro" cx="1060" cy="110" r="4" style="fill: var(--cal); opacity: .72"/>
       <line x1="0" y1="216" x2="1200" y2="216"/>
+    </g>
+  </svg>
+  <svg class="cal cal-esquina" viewBox="0 0 120 120" aria-hidden="true">
+    <g filter="url(#tiza)">
+      <path d="M0 10 H110 V120"/>
+      <path class="circulo" d="M78 10 A32 32 0 0 0 110 42"/>
     </g>
   </svg>
   <div class="marca">
@@ -436,8 +464,15 @@ function abrirPartido(id) {
   if (activo !== id) { vista.jugador = null; vista.lado = "home"; vista.tab = null; }
   activo = id;
   if (!$("lista").querySelector(`.partido[data-id="${CSS.escape(id)}"]`)) { $("buscar").value = ""; $("filtroLiga").value = ""; }
+  document.body.classList.add("ver-detalle");
   pintarLista(); pintarDestacados(); pintarDetalle();
-  $("lista").querySelector(".partido.activo")?.scrollIntoView({ block: "nearest" });
+  if (esAngosto()) $("detalle").scrollIntoView({ block: "start" });
+  else $("lista").querySelector(".partido.activo")?.scrollIntoView({ block: "nearest" });
+}
+
+function volverALista() {
+  document.body.classList.remove("ver-detalle");
+  $("lista").querySelector(".partido.activo")?.scrollIntoView({ block: "center" });
 }
 
 // ---------- ficha de un partido (summary) ----------
@@ -572,7 +607,7 @@ function resumenStat(ps) {
 // ---------- gráficos ----------
 function sparkline(ps) {
   const orden = [...ps].reverse();
-  const w = 7, gap = 2, h = 22, max = Math.max(vista.linea + 0.5, ...orden.map(p => p.stats[vista.stat] ?? 0));
+  const [w, gap] = esAngosto() ? [4, 1.5] : [7, 2], h = 22, max = Math.max(vista.linea + 0.5, ...orden.map(p => p.stats[vista.stat] ?? 0));
   const W = Math.max(orden.length * (w + gap) - gap, 1);
   const bars = orden.map((p, i) => {
     const v = p.stats[vista.stat] ?? 0, bh = Math.max(v / max * h, 2);
@@ -627,7 +662,8 @@ function cabecera(p) {
   const f = new Date(p.fecha);
   const estado = p.estado === "in" ? `<span class="vivo">${esc(p.detalle)}</span>` : esc(p.detalle);
   const jugado = p.estado !== "pre";
-  return `<div class="meta">${esc(p.liga_nombre)}, ${esc(fmtDia.format(f))} a las ${fmtHora.format(f)}. ${estado}</div>
+  return `<button class="volver" data-volver>Volver a los partidos</button>
+    <div class="meta">${esc(p.liga_nombre)}, ${esc(fmtDia.format(f))} a las ${fmtHora.format(f)}. ${estado}</div>
     <div class="duelo"><span>${esc(p.local)}</span>
       ${jugado ? `<span class="res">${esc(p.gl)}–${esc(p.gv)}</span>` : `<span class="vs">vs</span>`}
       <span>${esc(p.visitante)}</span></div>
@@ -708,23 +744,57 @@ async function pintarPrevia(p) {
   if (!vista.jugador || !jugadores.has(vista.jugador)) vista.jugador = filas.find(f => f.pj)?.j.id ?? null;
 
   const stat = NOMBRE_STAT[vista.stat].toLowerCase();
-  const cols = [["jugador", "Jugador", "izq"], ["pos", "Pos", "izq"], ["pj", "PJ"], ["min", "Min por partido"],
+  const cols = [["jugador", "Jugador", "izq"], ["pos", "Pos", "izq col-opc"], ["pj", "PJ"], ["min", "Min por partido", "col-opc"],
     ["prom", `Promedio de ${stat}`], ["pct", `Superó ${r1(vista.linea)}`], ["spark", "Últimos partidos", "izq"]];
+  plantelActual = jugadores;
+  const enTabla = esAngosto();  // en celular el gráfico va debajo del jugador elegido
   const tabla = `<div class="tablewrap"><table data-tabla="plantel"><thead><tr>${cols.map(([c, t, cl]) =>
       `<th data-col="${c}" class="${cl || ""} ${c === col ? "ord" + (asc ? " asc" : "") : ""}">${t}</th>`).join("")}</tr></thead><tbody>
     ${filas.map(f => `<tr class="fila${f.j.id === vista.jugador ? " sel" : ""}" data-j="${esc(f.j.id)}" tabindex="0">
       <td class="izq">${esc(f.j.nombre)}${f.hoy ? `<span class="hoy">${f.hoy.titular ? "Titular hoy" : "Convocado"}</span>` : ""}</td>
-      <td class="izq sup">${esc(f.j.pos === "SUB" ? "" : f.j.pos)}</td>
-      <td>${f.pj}</td><td>${f.min != null ? Math.round(f.min) : "–"}</td>
+      <td class="izq sup col-opc">${esc(f.j.pos === "SUB" ? "" : f.j.pos)}</td>
+      <td>${f.pj}</td><td class="col-opc">${f.min != null ? Math.round(f.min) : "–"}</td>
       <td>${f.prom != null ? r1(f.prom) : "–"}</td>
       <td class="pct">${f.pct != null ? `${Math.round(f.pct * 100)}%<small>${f.sup} de ${f.n}</small>` : "–"}</td>
-      <td class="izq">${f.ps.length ? sparkline(f.ps) : ""}</td></tr>`).join("")}
+      <td class="izq">${f.ps.length ? sparkline(f.ps) : ""}</td></tr>${enTabla && f.j.id === vista.jugador ? PANEL_FILA : ""}`).join("")}
     </tbody></table></div>
     <p class="nota" style="margin-top:10px">La tabla usa los últimos ${forma.partidos.length} partidos de ${esc(nombreEq)} en todas sus competiciones; los minutos son aproximados.
     ${conv.length ? "" : "La alineación aparece cuando ESPN la publica, cerca del inicio."}</p>`;
 
-  $("previa").innerHTML = `<section class="jugador" id="panelJugador"></section>` + tabla;
+  $("previa").innerHTML = (enTabla ? "" : `<section class="jugador" id="panelJugador"></section>`) + tabla;
   pintarJugador(jugadores.get(vista.jugador));
+}
+
+let plantelActual = null;
+const PANEL_FILA = `<tr class="panel-fila"><td colspan="7"><section class="jugador" id="panelJugador"></section></td></tr>`;
+const esAngosto = () => window.matchMedia("(max-width: 860px)").matches;
+
+// Ejecuta un cambio en la página sin que se mueva lo que el usuario está mirando:
+// mide dónde está `ancla` antes y después, y compensa el scroll.
+function sinSalto(ancla, cambio) {
+  const antes = ancla?.isConnected ? ancla.getBoundingClientRect().top : null;
+  cambio();
+  if (antes == null || !ancla.isConnected) return;
+  const delta = ancla.getBoundingClientRect().top - antes;
+  if (Math.abs(delta) < 1) return;
+  const main = $("detalle");
+  if (!esAngosto() && main.scrollHeight > main.clientHeight) main.scrollTop += delta;
+  else window.scrollBy(0, delta);
+}
+
+function elegirFila(fila) {
+  const id = fila.dataset.j;
+  if (id === vista.jugador || !plantelActual) return;
+  vista.jugador = id;
+  sinSalto(fila, () => {
+    document.querySelectorAll("tr.fila.sel").forEach(r => r.classList.remove("sel"));
+    fila.classList.add("sel");
+    if (esAngosto()) {
+      document.querySelector("tr.panel-fila")?.remove();
+      fila.insertAdjacentHTML("afterend", PANEL_FILA);
+    }
+    pintarJugador(plantelActual.get(id));
+  });
 }
 
 async function pintarJugador(j) {
@@ -763,10 +833,10 @@ async function pintarJugador(j) {
   };
   dibujar(j.partidos, true);
   const extra = await partidosAtleta(j.id);
-  if (vista.jugador !== j.id || !$("panelJugador")) return;
+  if (vista.jugador !== j.id || $("panelJugador") !== cont) return;
   const porId = new Map(j.partidos.map(p => [p.eventId, p]));
   for (const p of extra) if (!porId.has(p.eventId)) porId.set(p.eventId, p);
-  dibujar([...porId.values()], false);
+  sinSalto(document.querySelector("tr.fila.sel"), () => dibujar([...porId.values()], false));
 }
 
 function activarTooltip(chart, orden) {
@@ -797,8 +867,8 @@ $("lista").addEventListener("click", e => {
 $("destacados").addEventListener("click", e => {
   const b = e.target.closest(".rapido"); if (b) abrirPartido(b.dataset.id);
 });
-const elegirFila = fila => { vista.jugador = fila.dataset.j; pintarDetalle(); $("detalle").scrollTo({ top: 0, behavior: "smooth" }); };
 $("detalle").addEventListener("click", e => {
+  if (e.target.closest("[data-volver]")) { volverALista(); return; }
   const tab = e.target.closest("[data-tab]");
   if (tab) { vista.tab = tab.dataset.tab; pintarDetalle(); return; }
   const lado = e.target.closest("[data-lado]");
