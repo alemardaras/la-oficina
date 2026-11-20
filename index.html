@@ -6,154 +6,166 @@
 <title>La Oficina · Stats</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  /* ---------- tokens: cancha de día ---------- */
+  /* ---------- tokens: claro ---------- */
   :root {
     color-scheme: light;
     --pasto-1: #3f7f2e; --pasto-2: #4a8c35; --pasto-3: #326b26; --pasto-4: #38752a;
     --cal: #f7f9f4; --amarilla: #f2c230;
-    --bg: #e9efea; --panel: #f7f9f4; --text: #14231a; --text-2: #4b5e50;
-    --border: #cfd9d1; --grid: #dee6df; --sel: #fbf0c4;
-    --hit: #1f5e3a; --miss: #b4c2b7; --live: #c8362f;
-    --display: "Big Shoulders Display", "Arial Narrow", sans-serif;
-    --ui: "Barlow", system-ui, sans-serif;
+    --bg: #f0f1f3; --panel: #ffffff; --panel-2: #f6f7f8; --text: #141414; --text-2: #6c7076;
+    --border: #e7e8eb; --grid: #eceef0; --sel: #e7f6ee;
+    --acento: #00985f; --hit: #00985f; --miss: #cfd3d8; --live: #e5484d;
+    --top: #1a1a1a; --sombra: 0 1px 2px rgba(0,0,0,.05), 0 1px 8px rgba(0,0,0,.04);
+    --display: "Inter", system-ui, sans-serif;
+    --ui: "Inter", system-ui, sans-serif;
   }
-  /* ---------- partido nocturno ---------- */
+  /* ---------- oscuro ---------- */
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) {
       color-scheme: dark;
       --pasto-1: #23511d; --pasto-2: #2a5d22; --pasto-3: #1c4518; --pasto-4: #214e1c;
-      --bg: #0d1912; --panel: #12241a; --text: #e8efe9; --text-2: #a3b5a8;
-      --border: #24392b; --grid: #1c3024; --sel: #3a3315;
-      --hit: #4bb076; --miss: #3a5243; --live: #ff7a70;
+      --bg: #0f0f0f; --panel: #1d1d1d; --panel-2: #262626; --text: #f2f2f2; --text-2: #9b9b9b;
+      --border: #2d2d2d; --grid: #2a2a2a; --sel: #173328;
+      --acento: #14a86e; --hit: #2fbf7f; --miss: #3d3d3d; --live: #ff6b6b;
+      --top: #1d1d1d; --sombra: none;
     }
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
     --pasto-1: #23511d; --pasto-2: #2a5d22; --pasto-3: #1c4518; --pasto-4: #214e1c;
-    --bg: #0d1912; --panel: #12241a; --text: #e8efe9; --text-2: #a3b5a8;
-    --border: #24392b; --grid: #1c3024; --sel: #3a3315;
-    --hit: #4bb076; --miss: #3a5243; --live: #ff7a70;
+    --bg: #0f0f0f; --panel: #1d1d1d; --panel-2: #262626; --text: #f2f2f2; --text-2: #9b9b9b;
+    --border: #2d2d2d; --grid: #2a2a2a; --sel: #173328;
+    --acento: #14a86e; --hit: #2fbf7f; --miss: #3d3d3d; --live: #ff6b6b;
+    --top: #1d1d1d; --sombra: none;
   }
 
   * { box-sizing: border-box; }
   html, body { height: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 var(--ui);
-         display: flex; flex-direction: column; }
-  :focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 4px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--ui);
+         display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
+  :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 6px; }
   button, input, select { font: inherit; color: inherit; }
 
-  /* ---------- banner: la cancha ---------- */
-  /* Césped: franjas de corte con brillo propio (como las deja la cortadora), luz de estadio desde arriba,
-     sombra hacia la tribuna y dos texturas de ruido encima: briznas verticales y grano fino. */
-  .cancha { position: relative; overflow: hidden; color: var(--cal); isolation: isolate;
-            background:
-              radial-gradient(ellipse 70% 130% at 22% -20%, rgba(255, 252, 220, .20), transparent 62%),
-              linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(4, 22, 6, .38)),
-              repeating-linear-gradient(90deg,
-                var(--pasto-1) 0, var(--pasto-2) 40px, var(--pasto-1) 80px,
-                var(--pasto-3) 80px, var(--pasto-4) 120px, var(--pasto-3) 160px);
-            padding: 22px 28px 18px; flex: none; }
-  .cancha::before, .cancha::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: -1; }
-  .cancha::before { /* briznas */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95 .045' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .78  0 0 0 0 .92  0 0 0 0 .45  0 0 0 1.6 -.62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
-    mix-blend-mode: soft-light; opacity: .9; }
-  .cancha::after { /* grano y zonas más secas */
-    background-image:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.4' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .02  0 0 0 0 .12  0 0 0 0 .02  0 0 0 1.5 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55  0 0 0 0 .6  0 0 0 0 .25  0 0 0 1.4 -.7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
-    mix-blend-mode: multiply; opacity: .55; }
-  .cancha svg.cal { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .cal path, .cal line, .cal circle { fill: none; stroke: var(--cal); stroke-width: 3; opacity: .72; }
-  .cal .circulo { stroke-dasharray: 700; stroke-dashoffset: 0; }
-  @media (prefers-reduced-motion: no-preference) {
-    .cal .circulo { animation: trazar 1.4s cubic-bezier(.6,.1,.3,1) both .15s; }
-    @keyframes trazar { from { stroke-dashoffset: 700; } }
-  }
-  .marca { position: relative; }
-  .marca h1 { margin: 0; font: 900 clamp(54px, 8.5vw, 112px)/.82 var(--display); letter-spacing: -.01em;
-              text-shadow: 0 2px 0 rgba(0,0,0,.18); }
-  .marca p { margin: 6px 0 0 4px; font: 600 clamp(20px, 2.4vw, 28px)/1 var(--display); letter-spacing: .02em; opacity: .9; }
-  .controles { position: relative; display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: end; margin-top: 18px; }
-  .controles label { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--cal); opacity: .92; }
-  .controles input, .controles select { background: rgba(8, 28, 16, .35); border: 1.5px solid rgba(247,249,244,.55);
-            color: var(--cal); border-radius: 6px; padding: 6px 9px; color-scheme: dark; }
-  .controles select option { color: #14231a; background: #f7f9f4; }
-  .controles button { background: var(--cal); color: #14231a; border: 0; border-radius: 6px; padding: 8px 16px;
-            font-weight: 700; cursor: pointer; }
-  .controles button:disabled { opacity: .6; cursor: default; }
-  #estado { font-size: 13px; align-self: center; opacity: .9; }
-  .controles button.musica { margin-left: auto; background: rgba(6, 26, 10, .42); color: var(--cal);
-            border: 1.5px solid rgba(247, 249, 244, .6); border-radius: 999px; padding: 6px 14px; font-weight: 500; }
-  .controles button.musica[aria-pressed="true"] { background: var(--cal); color: #14231a; border-color: var(--cal); font-weight: 700; }
-  .destacados { position: relative; display: flex; gap: 8px; margin-top: 14px; overflow-x: auto; padding-bottom: 2px;
-                scrollbar-width: none; }
+  /* ---------- barra superior ---------- */
+  .topbar { flex: none; background: var(--top); color: #fff; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .topbar .in { max-width: 1440px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; letter-spacing: -.02em; white-space: nowrap; }
+  .logo .ico { width: 32px; height: 32px; border-radius: 50%; background: var(--acento); display: grid; place-items: center; flex: none; }
+  .logo .tag { font-size: 11px; font-weight: 700; letter-spacing: .02em; background: rgba(255,255,255,.12); padding: 2px 8px; border-radius: 999px; }
+  .buscador { flex: 1; max-width: 440px; position: relative; margin-left: 12px; }
+  .buscador svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); opacity: .6; pointer-events: none; }
+  .buscador input { width: 100%; background: rgba(255,255,255,.1); border: 0; border-radius: 999px; padding: 9px 14px 9px 38px; color: #fff; }
+  .buscador input::placeholder { color: rgba(255,255,255,.55); }
+  .buscador input:focus { background: rgba(255,255,255,.16); outline: none; }
+  .musica { margin-left: auto; background: rgba(255,255,255,.1); color: #fff; border: 0; border-radius: 999px;
+            padding: 8px 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .musica:hover { background: rgba(255,255,255,.16); }
+  .musica[aria-pressed="true"] { background: var(--acento); }
+
+  /* ---------- destacados ---------- */
+  .franja { flex: none; max-width: 1440px; width: 100%; margin: 0 auto; padding: 12px 16px 0; }
+  .destacados { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; }
   .destacados::-webkit-scrollbar { display: none; }
   .destacados:empty { display: none; }
-  .destacados span.t { align-self: center; font-size: 13px; opacity: .85; flex: none; margin-right: 2px; }
-  .rapido { flex: none; display: flex; align-items: center; gap: 8px; max-width: 290px; border-radius: 999px;
-            border: 1.5px solid rgba(247, 249, 244, .6); background: rgba(6, 26, 10, .42); color: var(--cal);
-            padding: 5px 13px; cursor: pointer; backdrop-filter: blur(2px); }
-  .rapido:hover { background: rgba(6, 26, 10, .6); border-color: var(--cal); }
-  .rapido.activo { background: var(--amarilla); border-color: var(--amarilla); color: #14231a; }
-  .rapido .eqs { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-  .rapido .cuando { font: 700 15px var(--display); opacity: .9; white-space: nowrap; }
-  .rapido .punto { width: 7px; height: 7px; border-radius: 50%; background: #ff5a4e; flex: none; }
+  .rapido { flex: none; width: 220px; display: flex; flex-direction: column; gap: 6px; text-align: left; cursor: pointer;
+            background: var(--panel); border: 2px solid transparent; border-radius: 14px; padding: 10px 12px; box-shadow: var(--sombra); }
+  .rapido:hover { border-color: var(--border); }
+  .rapido.activo { border-color: var(--acento); }
+  .r-cab { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--text-2); }
+  .r-liga { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r-cuando { white-space: nowrap; font-weight: 600; }
+  .r-vivo { color: var(--live); font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+  .r-vivo i { width: 6px; height: 6px; border-radius: 50%; background: var(--live); }
+  .r-eq { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; }
+  .r-eq .nom { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r-eq b { font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  /* escudos */
+  .esc { width: 20px; height: 20px; object-fit: contain; flex: none; }
+  .esc-liga { width: 20px; height: 20px; object-fit: contain; flex: none; }
+  .esc-grande { width: 60px; height: 60px; object-fit: contain; }
+  .esc-ph { display: inline-block; border-radius: 50%; background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--border); }
 
   /* ---------- cuerpo ---------- */
-  .layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 300px 1fr; }
-  aside { border-right: 1px solid var(--border); padding: 14px 14px 24px; overflow-y: auto; background: var(--bg); }
-  aside input, aside select { width: 100%; margin-bottom: 8px; padding: 8px 10px; border: 1px solid var(--border);
-            border-radius: 6px; background: var(--panel); }
-  .dia { margin: 16px 0 4px; font-weight: 700; font-size: 13px; color: var(--text-2); }
-  .dia::first-letter { text-transform: uppercase; }
-  .partido { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; width: 100%; text-align: left;
-             border: 0; border-left: 4px solid transparent; background: none; padding: 8px 10px 8px 10px;
-             cursor: pointer; border-radius: 0 6px 6px 0; }
-  .partido:hover { background: var(--panel); }
-  .partido.activo { background: var(--sel); border-left-color: var(--amarilla); }
-  .partido .liga { grid-column: 1 / -1; font-size: 12px; color: var(--text-2); }
-  .partido .eq { font-size: 14px; }
-  .partido .gol { font: 800 18px/1.25 var(--display); text-align: right; }
-  .partido .hora { grid-column: 2; grid-row: 2 / span 2; align-self: center; font: 600 17px var(--display); color: var(--text-2); }
+  .layout { flex: 1; min-height: 0; display: grid; grid-template-columns: 390px 1fr; gap: 16px;
+            max-width: 1440px; width: 100%; margin: 0 auto; padding: 12px 16px 16px; }
+  aside { overflow-y: auto; padding-right: 2px; scrollbar-width: thin; }
+  .card { background: var(--panel); border-radius: 16px; box-shadow: var(--sombra); }
+  .panel-carga { padding: 14px; display: grid; gap: 10px; margin-bottom: 4px; }
+  .panel-carga .fechas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .panel-carga label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--text-2); }
+  .panel-carga input, .panel-carga select { width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--border);
+            border-radius: 10px; background: var(--panel-2); color: var(--text); font-weight: 500; }
+  .fila-cargar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #cargar { background: var(--acento); color: #fff; border: 0; border-radius: 999px; padding: 8px 16px; font-weight: 700; cursor: pointer; }
+  #cargar:disabled { opacity: .6; cursor: default; }
+  #estado { font-size: 12px; color: var(--text-2); }
+
+  .dia { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 14px 4px 8px; font-weight: 700; font-size: 15px; }
+  .dia span { color: var(--text-2); font-weight: 500; font-size: 13px; margin-left: 4px; }
+  .liga-card { background: var(--panel); border-radius: 14px; overflow: hidden; margin-bottom: 10px; box-shadow: var(--sombra); }
+  .liga-cab { display: flex; align-items: center; gap: 10px; padding: 11px 14px; font-weight: 700; font-size: 13px;
+              border-bottom: 1px solid var(--border); }
+  .liga-cab .n { margin-left: auto; color: var(--text-2); font-weight: 500; font-size: 12px; }
+  .partido { display: grid; grid-template-columns: 1fr 70px 1fr; align-items: center; gap: 8px; width: 100%;
+             border: 0; background: none; padding: 11px 12px; cursor: pointer; text-align: left; }
+  .partido + .partido { border-top: 1px solid var(--border); }
+  .partido:hover { background: var(--panel-2); }
+  .partido.activo { background: var(--sel); box-shadow: inset 3px 0 0 var(--acento); }
+  .partido .eq { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; font-weight: 500; }
+  .partido .loc { justify-content: flex-end; text-align: right; }
+  .partido .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .partido .centro { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+  .partido .marcador { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .partido .hora { font-weight: 600; font-size: 14px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .partido .st { font-size: 11px; color: var(--text-2); white-space: nowrap; }
+  .partido.envivo .marcador { color: var(--live); }
+  .partido.envivo .st { color: var(--live); font-weight: 700; }
   .vivo { color: var(--live); font-weight: 700; }
 
-  main { overflow-y: auto; padding: 22px 28px 40px; background: var(--panel); }
+  main { overflow-y: auto; padding: 20px 24px 40px; background: var(--panel); border-radius: 16px; box-shadow: var(--sombra); }
   .vacio { color: var(--text-2); padding: 48px 0; max-width: 46ch; }
   .meta { font-size: 13px; color: var(--text-2); }
-  .duelo { margin: 2px 0 14px; font: 800 clamp(28px, 3.4vw, 42px)/1 var(--display); display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
-  .duelo .vs { font-weight: 600; font-size: .55em; color: var(--text-2); }
-  .duelo .res { font-weight: 900; }
 
-  .tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-  .tabs button { background: none; border: 0; border-bottom: 3px solid transparent; padding: 6px 0 8px; cursor: pointer;
-                 color: var(--text-2); margin-bottom: -1px; }
-  .tabs button.on { color: var(--text); border-bottom-color: var(--hit); font-weight: 700; }
+  /* encabezado del partido */
+  .encabezado { padding: 4px 0 18px; }
+  .enc-meta { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; }
+  .enc-duelo { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; margin-top: 16px; }
+  .enc-eq { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; font-weight: 700; font-size: 16px; min-width: 0; }
+  .enc-centro { text-align: center; min-width: 110px; }
+  .enc-res { font-weight: 800; font-size: 36px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .enc-hora { font-weight: 800; font-size: 28px; line-height: 1; }
+  .enc-st { margin-top: 6px; font-size: 13px; color: var(--text-2); }
+  .enc-st.vivo { color: var(--live); }
+
+  .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--border); margin-bottom: 18px; justify-content: center; }
+  .tabs button { background: none; border: 0; border-bottom: 3px solid transparent; padding: 8px 2px 10px; cursor: pointer;
+                 color: var(--text-2); margin-bottom: -1px; font-weight: 600; }
+  .tabs button.on { color: var(--text); border-bottom-color: var(--acento); }
 
   .filtros { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; margin-bottom: 20px; }
-  .filtros label { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--text-2); }
-  .filtros select { padding: 6px 9px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
-  .filtros label.check { flex-direction: row; align-items: center; gap: 7px; color: var(--text); font-size: 14px; padding-bottom: 6px; }
-  .seg { display: inline-flex; border: 1.5px solid var(--text); border-radius: 7px; overflow: hidden; }
-  .seg button { border: 0; background: none; padding: 6px 14px; cursor: pointer; }
-  .seg button + button { border-left: 1.5px solid var(--text); }
-  .seg button.on { background: var(--text); color: var(--panel); font-weight: 700; }
+  .filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--text-2); }
+  .filtros select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2); color: var(--text); font-weight: 500; }
+  .filtros label.check { flex-direction: row; align-items: center; gap: 7px; color: var(--text); font-size: 13px; padding-bottom: 7px; }
+  .seg { display: inline-flex; background: var(--panel-2); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: none; padding: 6px 14px; cursor: pointer; border-radius: 999px; font-weight: 600; color: var(--text-2); }
+  .seg button.on { background: var(--acento); color: #fff; }
 
   /* ---------- panel del jugador ---------- */
-  .jugador { display: grid; grid-template-columns: minmax(180px, 220px) 1fr; gap: 8px 28px; padding: 18px 0 22px;
-             border-top: 3px solid var(--text); border-bottom: 1px solid var(--border); margin-bottom: 18px; }
-  .jugador h3 { margin: 0; font: 800 26px/1.05 var(--display); }
+  .jugador { display: grid; grid-template-columns: minmax(180px, 220px) 1fr; gap: 8px 28px; padding: 18px;
+             background: var(--panel-2); border-radius: 14px; margin-bottom: 18px; }
+  .jugador h3 { margin: 0; font: 800 22px/1.15 var(--display); letter-spacing: -.01em; }
   .jugador .pos { font-size: 13px; color: var(--text-2); margin-top: 2px; }
   .cifra { margin-top: 14px; }
-  .cifra .v { font: 900 64px/.9 var(--display); }
-  .cifra .k { font-size: 13px; color: var(--text-2); }
+  .cifra .v { font: 800 52px/1 var(--display); letter-spacing: -.03em; color: var(--acento); }
+  .cifra .k { font-size: 13px; color: var(--text-2); margin-top: 4px; }
   .cifras-chicas { display: flex; gap: 22px; margin-top: 14px; }
-  .cifras-chicas .v { font: 800 26px/1 var(--display); }
+  .cifras-chicas .v { font: 800 22px/1 var(--display); }
   .cifras-chicas .k { font-size: 12px; color: var(--text-2); }
   .nota { font-size: 13px; color: var(--text-2); margin: 0 0 6px; }
   .leyenda { display: flex; gap: 16px; font-size: 12px; color: var(--text-2); margin: 0 0 4px; flex-wrap: wrap; }
-  .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
   .leyenda .dash { width: 16px; height: 0; border-top: 2px dashed var(--text); border-radius: 0; vertical-align: 3px; }
   .chart { position: relative; }
   .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
@@ -162,35 +174,35 @@
   details summary { cursor: pointer; color: var(--text-2); font-size: 13px; margin-top: 8px; }
   @media (max-width: 760px) { .jugador { grid-template-columns: 1fr; } }
 
-  .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1.5px solid var(--text);
-         border-radius: 6px; padding: 8px 10px; font-size: 13px; white-space: nowrap; display: none; z-index: 5; }
-  .tip b { font: 800 20px var(--display); }
+  .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--border);
+         box-shadow: 0 8px 24px rgba(0,0,0,.14); border-radius: 10px; padding: 8px 10px; font-size: 13px; white-space: nowrap; display: none; z-index: 5; }
+  .tip b { font: 800 18px var(--display); }
 
   /* ---------- tablas ---------- */
   .tablewrap { overflow-x: auto; }
   table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-  th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
-  th { font-size: 13px; color: var(--text-2); font-weight: 700; cursor: pointer; user-select: none; vertical-align: bottom; }
+  th, td { padding: 9px 10px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  th { font-size: 12px; color: var(--text-2); font-weight: 600; cursor: pointer; user-select: none; vertical-align: bottom; }
   th:hover { color: var(--text); }
   th.ord { color: var(--text); }
   th.ord::after { content: " ↓"; } th.ord.asc::after { content: " ↑"; }
   .izq { text-align: left; }
-  tr.total td { font-weight: 700; border-top: 2px solid var(--text); }
+  tr.total td { font-weight: 700; border-top: 2px solid var(--border); }
   tr.fila { cursor: pointer; }
-  tr.fila:hover td { background: var(--bg); }
+  tr.fila:hover td { background: var(--panel-2); }
   tr.fila.sel td { background: var(--sel); }
-  tr.fila.sel td:first-child { box-shadow: inset 4px 0 0 var(--amarilla); }
-  td.pct { font: 800 19px var(--display); }
-  td.pct small { font: 400 12px var(--ui); color: var(--text-2); margin-left: 3px; }
-  .hoy { font-size: 12px; color: var(--hit); font-weight: 700; margin-left: 6px; }
+  tr.fila.sel td:first-child { box-shadow: inset 3px 0 0 var(--acento); }
+  td.pct { font: 700 15px var(--display); }
+  td.pct small { font: 400 12px var(--ui); color: var(--text-2); margin-left: 4px; }
+  .hoy { font-size: 11px; color: var(--acento); font-weight: 700; margin-left: 6px; }
   .sup { color: var(--text-2); font-size: 12px; }
   .spark { vertical-align: middle; }
-  h4 { font: 800 22px var(--display); margin: 22px 0 6px; }
+  h4 { font: 700 17px var(--display); margin: 22px 0 8px; }
 
   /* ---------- alineaciones ---------- */
   .xi { margin-bottom: 22px; }
   .xi h4 { margin-top: 0; }
-  .campo, .campo-espera { display: block; width: 100%; height: auto; border-radius: 8px;
+  .campo, .campo-espera { display: block; width: 100%; height: auto; border-radius: 12px;
     background:
       radial-gradient(ellipse 80% 90% at 50% 40%, rgba(255, 252, 220, .10), transparent 70%),
       repeating-linear-gradient(90deg, var(--pasto-1) 0, var(--pasto-2) 4.75%, var(--pasto-1) 9.5%,
@@ -206,53 +218,53 @@
   .campo .ficha:focus-visible { outline: none; }
   .campo .ficha:focus-visible circle:not([fill="none"]) { stroke: var(--amarilla); }
   .campo text { font-family: var(--ui); paint-order: stroke; stroke: rgba(6, 26, 10, .55); stroke-width: 3px; stroke-linejoin: round; }
-  .campo text.dorsal { font-family: var(--display); font-weight: 800; stroke: none; }
+  .campo text.dorsal { font-weight: 800; stroke: none; }
   .campo text.nombre { fill: #f7f9f4; font-weight: 700; }
-  .campo text.pctxi { fill: #f7f9f4; font-family: var(--display); font-weight: 800; }
+  .campo text.pctxi { fill: #f7f9f4; font-weight: 800; }
   .xi-notas { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--text-2); margin-top: 8px; }
   .xi-notas b { color: var(--text); }
 
   /* ---------- talón ---------- */
-  .agregar { margin-top: 16px; background: var(--text); color: var(--panel); border: 0; border-radius: 6px;
-             padding: 9px 14px; font-weight: 700; cursor: pointer; }
-  .agregar.ya { background: none; color: var(--text); box-shadow: inset 0 0 0 1.5px var(--text); }
+  .agregar { margin-top: 16px; background: var(--acento); color: #fff; border: 0; border-radius: 999px;
+             padding: 9px 16px; font-weight: 700; cursor: pointer; }
+  .agregar.ya { background: none; color: var(--acento); box-shadow: inset 0 0 0 1.5px var(--acento); }
   .talon-boton { position: fixed; right: 18px; bottom: 18px; z-index: 20; display: flex; align-items: center; gap: 10px;
-                 background: var(--amarilla); color: #14231a; border: 0; border-radius: 999px; padding: 11px 18px 11px 20px;
-                 font: 800 20px var(--display); cursor: pointer; box-shadow: 0 6px 18px rgba(10, 30, 15, .28); }
-  .talon-boton .n { background: #14231a; color: var(--amarilla); border-radius: 999px; min-width: 26px; height: 26px;
-                    display: grid; place-items: center; font-size: 16px; padding: 0 7px; }
+                 background: var(--acento); color: #fff; border: 0; border-radius: 999px; padding: 11px 16px 11px 20px;
+                 font: 700 15px var(--ui); cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+  .talon-boton .n { background: #fff; color: var(--acento); border-radius: 999px; min-width: 24px; height: 24px;
+                    display: grid; place-items: center; font-size: 13px; font-weight: 800; padding: 0 7px; }
   @media (prefers-reduced-motion: no-preference) { .talon-boton.pulso { animation: pulso .45s ease-out; }
     @keyframes pulso { 40% { transform: scale(1.12); } } }
   .talon { position: fixed; right: 18px; bottom: 78px; z-index: 21; width: min(420px, calc(100vw - 36px));
            max-height: calc(100vh - 110px); overflow-y: auto; background: var(--panel); color: var(--text);
-           border: 1.5px solid var(--text); border-radius: 10px; box-shadow: 0 14px 40px rgba(10, 30, 15, .3); }
+           border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 14px 40px rgba(0, 0, 0, .25); }
   .talon[hidden] { display: none; }
-  .talon header { position: sticky; top: 0; background: var(--panel); padding: 14px 16px 10px; display: flex;
-                  align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 2px solid var(--text); z-index: 1; }
-  .talon h2 { margin: 0; font: 900 34px/1 var(--display); }
-  .talon header .cerrar { background: none; border: 0; font-size: 14px; color: var(--text-2); cursor: pointer; text-decoration: underline; }
-  .seleccion { padding: 14px 16px 12px; border-bottom: 2px dashed var(--border); position: relative; }
-  .seleccion .quien { font: 800 22px/1.05 var(--display); padding-right: 64px; }
-  .seleccion .donde { font-size: 13px; color: var(--text-2); margin-top: 2px; }
-  .seleccion .linea { margin-top: 8px; font-weight: 700; }
+  .talon header { position: sticky; top: 0; background: var(--panel); padding: 14px 16px 12px; display: flex;
+                  align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border); z-index: 1; }
+  .talon h2 { margin: 0; font: 800 22px/1 var(--display); }
+  .talon header .cerrar { background: none; border: 0; font-size: 13px; color: var(--text-2); cursor: pointer; text-decoration: underline; }
+  .seleccion { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); position: relative; }
+  .seleccion .quien { font: 700 17px/1.2 var(--display); padding-right: 64px; }
+  .seleccion .donde { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+  .seleccion .linea { margin-top: 8px; font-weight: 600; }
   .seleccion .quitar { position: absolute; top: 14px; right: 14px; background: none; border: 0; color: var(--text-2);
-                       font-size: 13px; cursor: pointer; text-decoration: underline; }
+                       font-size: 12px; cursor: pointer; text-decoration: underline; }
   .seleccion .datos { display: flex; gap: 18px; align-items: flex-end; margin-top: 6px; flex-wrap: wrap; }
-  .seleccion .datos .v { font: 900 30px/1 var(--display); }
-  .seleccion .datos .v.chica { font-size: 22px; }
+  .seleccion .datos .v { font: 800 26px/1 var(--display); color: var(--acento); }
+  .seleccion .datos .v.chica { font-size: 18px; color: var(--text); }
   .seleccion .datos .k { font-size: 12px; color: var(--text-2); }
   .seleccion svg { display: block; width: 100%; height: auto; margin-top: 10px; }
   .seleccion svg text { fill: var(--text-2); font: 11px var(--ui); }
   .seleccion svg text.val { fill: var(--text); font-weight: 700; }
-  .talon .pie { padding: 14px 16px 16px; background: var(--bg); }
+  .talon .pie { padding: 14px 16px 16px; background: var(--panel-2); }
   .talon .pie .total { display: flex; gap: 22px; align-items: flex-end; }
-  .talon .pie .v { font: 900 34px/1 var(--display); }
+  .talon .pie .v { font: 800 28px/1 var(--display); }
   .talon .pie .k { font-size: 12px; color: var(--text-2); }
   .talon .pie p { font-size: 12px; color: var(--text-2); margin: 10px 0 12px; }
   .talon .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
-  .talon .acciones button, .talon .acciones a { border: 1.5px solid var(--text); background: none; color: var(--text);
-            border-radius: 6px; padding: 7px 12px; font-weight: 700; cursor: pointer; text-decoration: none; font-size: 14px; }
-  .talon .acciones .principal { background: var(--text); color: var(--panel); }
+  .talon .acciones button, .talon .acciones a { border: 1px solid var(--border); background: var(--panel); color: var(--text);
+            border-radius: 999px; padding: 7px 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 13px; }
+  .talon .acciones .principal { background: var(--acento); border-color: var(--acento); color: #fff; }
   .talon .vacio { padding: 24px 16px; }
   @media (max-width: 860px) {
     .talon { inset: 0; width: auto; max-height: none; border-radius: 0; border: 0; }
@@ -261,23 +273,30 @@
 
   /* Panel del jugador dentro de la tabla (celular): se abre debajo del jugador tocado */
   tr.panel-fila td { white-space: normal; text-align: left; padding: 0; background: var(--panel); }
-  tr.panel-fila .jugador { margin: 0; padding: 14px 4px 18px; border-top: 0; border-bottom: 3px solid var(--text); }
+  tr.panel-fila .jugador { margin: 6px 0 10px; padding: 14px 12px 16px; }
   .volver { display: none; }
-  .cancha svg.cal-esquina { display: none; inset: 0 0 auto auto; width: 120px; height: 120px; }
 
   @media (max-width: 860px) {
     body { height: auto; }
-    .layout { grid-template-columns: 1fr; }
-    aside { border-right: 0; max-height: none; }
+    /* grilla fija: que el texto del botón de música cambie no mueve nada */
+    .topbar .in { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 12px; }
+    .logo { min-width: 0; overflow: hidden; }
+    .buscador { grid-column: 1 / -1; grid-row: 2; max-width: none; margin-left: 0; }
+    .layout { grid-template-columns: 1fr; padding: 10px 12px 80px; gap: 10px; }
+    .franja { padding: 10px 12px 0; }
+    aside { overflow: visible; padding-right: 0; }
+    .dia { position: static; }
     /* lista y partido en pantallas separadas */
     body.ver-detalle aside { display: none; }
     body:not(.ver-detalle) main { display: none; }
     body.ver-detalle main { min-height: 100vh; }
-    .volver { display: inline-block; background: none; border: 1.5px solid var(--text); border-radius: 6px;
-              padding: 6px 12px; margin-bottom: 14px; cursor: pointer; font-weight: 700; }
-    /* en vez del círculo central, el arco del córner */
-    .cal .centro { display: none; }
-    .cancha svg.cal-esquina { display: block; }
+    .volver { display: inline-block; background: var(--panel-2); border: 0; border-radius: 999px;
+              padding: 7px 14px; margin-bottom: 8px; cursor: pointer; font-weight: 600; }
+    .esc-grande { width: 48px; height: 48px; }
+    .enc-eq { font-size: 14px; }
+    .enc-meta > span[aria-hidden] { display: none; }
+    .enc-meta > span:last-child { flex-basis: 100%; text-align: center; }
+    .enc-res { font-size: 30px; }
     /* la tabla del plantel entra en el ancho del teléfono */
     .col-opc { display: none; }
     table[data-tabla="plantel"] th, table[data-tabla="plantel"] td { padding: 8px 4px; }
@@ -285,55 +304,28 @@
     table[data-tabla="plantel"] td.pct small { display: none; }
     tr.panel-fila td { max-width: calc(100vw - 32px); }
     table[data-tabla="plantel"] th { white-space: normal; }
-    main { padding: 18px 16px 32px; }
-    .cancha { padding: 18px 16px 14px; }
-    .controles label { flex: 1 1 140px; }
-    .controles input, .controles select { width: 100%; min-width: 0; }
+    main { padding: 16px 14px 32px; }
   }
 </style>
 </head>
 <body>
-<header class="cancha">
-  <svg class="cal" viewBox="0 0 1200 220" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">
-    <defs>
-      <!-- borde irregular, como la cal pintada sobre el pasto -->
-      <filter id="tiza" x="-5%" y="-5%" width="110%" height="110%">
-        <feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" result="ruido"/>
-        <feDisplacementMap in="SourceGraphic" in2="ruido" scale="3"/>
-      </filter>
-    </defs>
-    <g filter="url(#tiza)">
-      <line class="centro" x1="1060" y1="0" x2="1060" y2="220"/>
-      <circle class="centro circulo" cx="1060" cy="110" r="110"/>
-      <circle class="centro" cx="1060" cy="110" r="4" style="fill: var(--cal); opacity: .72"/>
-      <line x1="0" y1="216" x2="1200" y2="216"/>
-    </g>
-  </svg>
-  <svg class="cal cal-esquina" viewBox="0 0 120 120" aria-hidden="true">
-    <g filter="url(#tiza)">
-      <path d="M0 10 H110 V120"/>
-      <path class="circulo" d="M78 10 A32 32 0 0 0 110 42"/>
-    </g>
-  </svg>
-  <div class="marca">
-    <h1>La Oficina</h1>
-    <p>Stats</p>
-  </div>
-  <div class="controles">
-    <label>Desde <input type="date" id="desde"></label>
-    <label>Hasta <input type="date" id="hasta"></label>
-    <label>Ligas <select id="grupo"></select></label>
-    <button id="cargar">Cargar partidos</button>
-    <span id="estado" role="status"></span>
+<header class="topbar">
+  <div class="in">
+    <div class="logo"><span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.5" y="8" width="3" height="6.5" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10.5" rx="1" fill="#fff"/><rect x="11.5" y="1.5" width="3" height="13" rx="1" fill="#fff"/></svg></span>La Oficina <span class="tag">STATS</span></div>
+    <label class="buscador"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M11 11l3.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg><input id="buscar" type="search" placeholder="Buscar equipo o liga" aria-label="Buscar equipo o liga"></label>
     <button id="musicaBtn" class="musica" aria-pressed="false">Poner música</button>
     <audio id="musica" src="cancion.mp3" loop preload="none"></audio>
   </div>
-  <nav class="destacados" id="destacados" aria-label="Partidos destacados"></nav>
 </header>
+<div class="franja"><nav class="destacados" id="destacados" aria-label="Partidos destacados"></nav></div>
 <div class="layout">
   <aside>
-    <input id="buscar" type="search" placeholder="Buscar equipo o liga" aria-label="Buscar equipo o liga">
-    <select id="filtroLiga" aria-label="Filtrar por liga"><option value="">Todas las ligas cargadas</option></select>
+    <div class="card panel-carga">
+      <div class="fechas"><label>Desde <input type="date" id="desde"></label><label>Hasta <input type="date" id="hasta"></label></div>
+      <label>Ligas <select id="grupo"></select></label>
+      <div class="fila-cargar"><button id="cargar">Cargar partidos</button><span id="estado" role="status"></span></div>
+      <select id="filtroLiga" aria-label="Filtrar por liga"><option value="">Todas las ligas cargadas</option></select>
+    </div>
     <div id="lista"><div class="vacio">Cargando partidos…</div></div>
   </aside>
   <main id="detalle"><div class="vacio">Elegí un partido de la lista para ver la forma de cada jugador.</div></main>
@@ -442,6 +434,7 @@ async function cargarPartidos() {
         id: ev.id, fecha: ev.date, liga, liga_nombre: nombre,
         local: eq.home.team.displayName, visitante: eq.away.team.displayName,
         homeId: eq.home.team.id, awayId: eq.away.team.id,
+        logoL: eq.home.team.logo, logoV: eq.away.team.logo, ligaLogo: j.leagues?.[0]?.logos?.[0]?.href,
         gl: eq.home.score, gv: eq.away.score, estado: st.state, detalle: DETALLE_ES[st.shortDetail] || st.shortDetail,
       });
     }
@@ -458,21 +451,49 @@ async function cargarPartidos() {
   pintarDestacados();
 }
 
+const cap = t => t ? t[0].toUpperCase() + t.slice(1) : t;
+const escudo = (url, cls = "esc") => url
+  ? `<img class="${cls}" src="${esc(url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`
+  : `<span class="${cls} esc-ph" aria-hidden="true"></span>`;
+const sinMarcador = p => /Postergado|Cancelado/.test(p.detalle || "");
+
+function filaPartido(p) {
+  const f = new Date(p.fecha), vivo = p.estado === "in", jugado = p.estado !== "pre" && !sinMarcador(p);
+  const centro = jugado
+    ? `<span class="marcador">${esc(p.gl)} - ${esc(p.gv)}</span><span class="st">${esc(p.detalle)}</span>`
+    : sinMarcador(p) ? `<span class="hora">–</span><span class="st">${esc(p.detalle)}</span>`
+    : `<span class="hora">${fmtHora.format(f)}</span>`;
+  return `<button class="partido${p.id === activo ? " activo" : ""}${vivo ? " envivo" : ""}" data-id="${esc(p.id)}">
+    <span class="eq loc"><span class="nom">${esc(p.local)}</span>${escudo(p.logoL)}</span>
+    <span class="centro">${centro}</span>
+    <span class="eq vis">${escudo(p.logoV)}<span class="nom">${esc(p.visitante)}</span></span></button>`;
+}
+
 function pintarLista() {
   const q = norm($("buscar").value).trim(), liga = $("filtroLiga").value;
   const ps = partidos.filter(p => (!liga || p.liga === liga) &&
     (!q || q.split(/\s+/).every(t => norm(`${p.local} ${p.visitante} ${p.liga_nombre}`).includes(t))));
-  let html = "", diaAnt = "";
+  // por día y, dentro de cada día, por liga (las más importantes primero)
+  const dias = new Map();
   for (const p of ps) {
-    const f = new Date(p.fecha), dia = fmtDia.format(f);
-    if (dia !== diaAnt) { html += `<div class="dia">${esc(dia)}</div>`; diaAnt = dia; }
-    const jugado = p.estado !== "pre";
-    const liga = p.estado === "in" ? `${esc(p.liga_nombre)} <span class="vivo">${esc(p.detalle)}</span>`
-               : jugado ? `${esc(p.liga_nombre)}, ${esc(p.detalle.toLowerCase())}` : esc(p.liga_nombre);
-    html += `<button class="partido${p.id === activo ? " activo" : ""}" data-id="${esc(p.id)}">
-      <span class="liga">${liga}</span>
-      <span class="eq">${esc(p.local)}</span>${jugado ? `<span class="gol">${esc(p.gl)}</span>` : `<span class="hora">${fmtHora.format(f)}</span>`}
-      <span class="eq">${esc(p.visitante)}</span>${jugado ? `<span class="gol">${esc(p.gv)}</span>` : ""}</button>`;
+    const k = isoLocal(new Date(p.fecha));
+    if (!dias.has(k)) dias.set(k, new Map());
+    const ls = dias.get(k);
+    if (!ls.has(p.liga)) ls.set(p.liga, []);
+    ls.get(p.liga).push(p);
+  }
+  const hoy = new Date(isoLocal(new Date()) + "T12:00");
+  let html = "";
+  for (const [k, ligas] of dias) {
+    const f = new Date(k + "T12:00"), dif = Math.round((f - hoy) / 864e5);
+    const rel = { 0: "Hoy", "-1": "Ayer", 1: "Mañana" }[dif];
+    html += `<div class="dia">${rel ? `${rel}<span>${esc(fmtDia.format(f))}</span>` : esc(cap(fmtDia.format(f)))}</div>`;
+    const orden = [...ligas.values()].sort((a, b) => (PESO_LIGA[b[0].liga] ?? 2) - (PESO_LIGA[a[0].liga] ?? 2)
+      || a[0].liga_nombre.localeCompare(b[0].liga_nombre));
+    for (const lps of orden) {
+      html += `<section class="liga-card"><div class="liga-cab">${escudo(lps[0].ligaLogo, "esc-liga")}<span>${esc(lps[0].liga_nombre)}</span>
+        <span class="n">${lps.length}</span></div>${lps.map(filaPartido).join("")}</section>`;
+    }
   }
   $("lista").innerHTML = html || `<div class="vacio">${partidos.length ? "Ningún partido coincide con la búsqueda." : "No hay partidos en esas fechas. Probá con otro rango o con todas las ligas principales."}</div>`;
 }
@@ -528,14 +549,16 @@ function pintarDestacados() {
   const ps = destacados();
   if (!ps.length) { $("destacados").innerHTML = ""; return; }
   const hoy = isoLocal(new Date());
-  $("destacados").innerHTML = `<span class="t">Destacados</span>` + ps.map(p => {
-    const f = new Date(p.fecha);
-    const cuando = p.estado === "in" ? `<span class="punto" aria-hidden="true"></span><span class="cuando">${esc(p.detalle)}</span>`
-      : p.estado === "post" ? `<span class="cuando">${esc(p.gl)}–${esc(p.gv)}</span>`
-      : `<span class="cuando">${isoLocal(f) === hoy ? "" : esc(fmtCorta.format(f)) + " "}${fmtHora.format(f)}</span>`;
+  $("destacados").innerHTML = ps.map(p => {
+    const f = new Date(p.fecha), jugado = p.estado !== "pre" && !sinMarcador(p);
+    const cuando = p.estado === "in" ? `<span class="r-vivo"><i aria-hidden="true"></i>${esc(p.detalle)}</span>`
+      : p.estado === "post" ? `<span class="r-cuando">${esc(p.detalle)}</span>`
+      : `<span class="r-cuando">${isoLocal(f) === hoy ? "Hoy" : esc(fmtCorta.format(f))} ${fmtHora.format(f)}</span>`;
     return `<button class="rapido${p.id === activo ? " activo" : ""}" data-id="${esc(p.id)}"
       title="${esc(p.local)} contra ${esc(p.visitante)}, ${esc(p.liga_nombre)}">
-      <span class="eqs">${esc(p.local)} – ${esc(p.visitante)}</span>${cuando}</button>`;
+      <span class="r-cab"><span class="r-liga">${esc(p.liga_nombre)}</span>${cuando}</span>
+      <span class="r-eq">${escudo(p.logoL)}<span class="nom">${esc(p.local)}</span>${jugado ? `<b>${esc(p.gl)}</b>` : ""}</span>
+      <span class="r-eq">${escudo(p.logoV)}<span class="nom">${esc(p.visitante)}</span>${jugado ? `<b>${esc(p.gv)}</b>` : ""}</span></button>`;
   }).join("");
 }
 
@@ -741,14 +764,21 @@ function graficoBarras(ps, ancho = 720) {
 
 // ---------- detalle ----------
 function cabecera(p) {
-  const f = new Date(p.fecha);
-  const estado = p.estado === "in" ? `<span class="vivo">${esc(p.detalle)}</span>` : esc(p.detalle);
+  const f = new Date(p.fecha), vivo = p.estado === "in";
   const jugado = p.estado !== "pre";
-  return `<button class="volver" data-volver>Volver a los partidos</button>
-    <div class="meta">${esc(p.liga_nombre)}, ${esc(fmtDia.format(f))} a las ${fmtHora.format(f)}. ${estado}</div>
-    <div class="duelo"><span>${esc(p.local)}</span>
-      ${jugado ? `<span class="res">${esc(p.gl)}–${esc(p.gv)}</span>` : `<span class="vs">vs</span>`}
-      <span>${esc(p.visitante)}</span></div>
+  const marcador = jugado && !sinMarcador(p) ? `<div class="enc-res">${esc(p.gl)} - ${esc(p.gv)}</div>`
+    : `<div class="enc-hora">${fmtHora.format(f)}</div>`;
+  const estado = jugado ? esc(p.detalle) : isoLocal(f) === isoLocal(new Date()) ? "Hoy" : esc(cap(fmtDia.format(f)));
+  return `<button class="volver" data-volver>← Partidos</button>
+    <div class="encabezado">
+      <div class="enc-meta">${escudo(p.ligaLogo, "esc-liga")}<span>${esc(p.liga_nombre)}</span><span aria-hidden="true">·</span>
+        <span>${esc(cap(fmtDia.format(f)))}, ${fmtHora.format(f)}</span></div>
+      <div class="enc-duelo">
+        <div class="enc-eq">${escudo(p.logoL, "esc-grande")}<span>${esc(p.local)}</span></div>
+        <div class="enc-centro">${marcador}<div class="enc-st${vivo ? " vivo" : ""}">${estado}</div></div>
+        <div class="enc-eq">${escudo(p.logoV, "esc-grande")}<span>${esc(p.visitante)}</span></div>
+      </div>
+    </div>
     <div class="tabs" role="tablist">
       <button role="tab" data-tab="previa" class="${vista.tab === "previa" ? "on" : ""}">Forma reciente</button>
       ${jugado ? `<button role="tab" data-tab="partido" class="${vista.tab === "partido" ? "on" : ""}">Este partido</button>` : ""}
@@ -1042,7 +1072,7 @@ async function pintarJugador(j) {
     const sel = filtrarPartidos(ps), r = resumenStat(sel);
     if (!sel.length) { cont.innerHTML = `<div><h3>${esc(j.nombre)}</h3></div><div class="vacio">No jugó partidos con estos filtros.</div>`; return; }
     const angosto = window.matchMedia("(max-width: 760px)").matches;
-    const { svg, orden } = graficoBarras(sel, angosto ? cont.clientWidth : cont.clientWidth - 248);
+    const { svg, orden } = graficoBarras(sel, angosto ? cont.clientWidth - 24 : cont.clientWidth - 284);
     ultimoPanel = { j, sel, r };
     const otros = sel.some(p => p.otroEquipo);
     const nota = cargandoOtros ? "Buscando también sus partidos con otros equipos…"
@@ -1319,7 +1349,7 @@ window.addEventListener("resize", () => {
     if (Math.abs(window.innerWidth - anchoPrevio) > 40 && $("panelJugador")) { anchoPrevio = window.innerWidth; pintarDetalle(); }
   }, 250);
 });
-$("buscar").addEventListener("input", pintarLista);
+$("buscar").addEventListener("input", () => { pintarLista(); if (esAngosto() && document.body.classList.contains("ver-detalle")) volverALista(); });
 $("filtroLiga").addEventListener("change", pintarLista);
 $("cargar").addEventListener("click", cargarPartidos);
 
