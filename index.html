@@ -45,7 +45,7 @@
   body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 var(--ui);
          display: flex; flex-direction: column; -webkit-font-smoothing: antialiased; }
   :focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 6px; }
-  button, input, select { font: inherit; color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
 
   /* ---------- barra superior ---------- */
   .topbar { flex: none; background: var(--top); color: #fff; border-bottom: 1px solid rgba(255,255,255,.06); }
@@ -223,6 +223,36 @@
   .campo text.pctxi { fill: #f7f9f4; font-weight: 800; }
   .xi-notas { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--text-2); margin-top: 8px; }
   .xi-notas b { color: var(--text); }
+  .xi-nota { display: block; }
+  .estado-xi { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .02em; text-transform: uppercase;
+               padding: 2px 8px; border-radius: 999px; margin-right: 6px; vertical-align: 1px; }
+  .estado-xi.conf { background: var(--acento); color: #fff; }
+  .estado-xi.prob { background: var(--amarilla); color: #1a1a1a; }
+  .dudas { display: block; color: var(--live); font-weight: 600; margin: 2px 0 4px; }
+  .campo .marca circle { stroke: #f7f9f4; stroke-width: 1.5; }
+  .campo .marca text { fill: #fff; stroke: none; font-weight: 800; }
+  .campo .m-baja circle, .campo .m-susp circle { fill: var(--live); }
+  .campo .m-rotar circle, .campo .m-banco circle { fill: #c98a00; }
+
+  /* ---------- avisos del plantel ---------- */
+  .avisos { margin-bottom: 22px; }
+  .avisos:empty { display: none; }
+  .avisos h4 { margin-top: 0; }
+  .avisos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .avisos-eq { background: var(--panel-2); border-radius: 12px; padding: 12px 14px; }
+  .avisos-eq h5 { margin: 0 0 8px; font-size: 14px; }
+  .avisos-eq ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .avisos-eq li { font-size: 13px; line-height: 1.35; }
+  .avisos-eq .quien { font-weight: 700; margin-right: 2px; }
+  .avisos-eq .por { display: block; color: var(--text-2); font-size: 12px; }
+  .avisos-eq p { margin: 0; }
+  .aviso { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+  .a-baja, .a-susp { background: color-mix(in srgb, var(--live) 16%, transparent); color: var(--live); }
+  .a-rotar, .a-banco { background: color-mix(in srgb, #e0a100 20%, transparent); color: #a86f00; }
+  .a-volvio, .a-hoy { background: color-mix(in srgb, var(--acento) 16%, transparent); color: var(--acento); }
+  :root[data-theme="dark"] .a-rotar, :root[data-theme="dark"] .a-banco { color: #f2c230; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .a-rotar, :root:not([data-theme="light"]) .a-banco { color: #f2c230; } }
+  @media (max-width: 760px) { .avisos-grid { grid-template-columns: 1fr; } }
 
   /* ---------- talón ---------- */
   .agregar { margin-top: 16px; background: var(--acento); color: #fff; border: 0; border-radius: 999px;
@@ -239,6 +269,37 @@
            max-height: calc(100vh - 110px); overflow-y: auto; background: var(--panel); color: var(--text);
            border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 14px 40px rgba(0, 0, 0, .25); }
   .talon[hidden] { display: none; }
+
+  /* ---------- chat IA ---------- */
+  .chat-boton { position: fixed; left: 18px; bottom: 18px; z-index: 20; background: var(--top); color: #fff; border: 0;
+                border-radius: 999px; padding: 11px 18px; font: 700 15px var(--ui); cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
+  .chat { position: fixed; left: 18px; bottom: 78px; z-index: 21; width: min(440px, calc(100vw - 36px));
+          height: min(640px, calc(100vh - 110px)); display: flex; flex-direction: column; background: var(--panel); color: var(--text);
+          border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 14px 40px rgba(0, 0, 0, .25); overflow: hidden; }
+  .chat[hidden] { display: none; }
+  .chat header { padding: 14px 16px 10px; display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--border); }
+  .chat h2 { margin: 0; font: 800 20px/1 var(--display); }
+  .chat header .sup { flex: 1; }
+  .chat header button { background: none; border: 0; font-size: 13px; color: var(--text-2); cursor: pointer; text-decoration: underline; }
+  .chat .mensajes { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .chat .msg { max-width: 92%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
+  .chat .msg.user { align-self: flex-end; background: var(--acento); color: #fff; border-bottom-right-radius: 4px; white-space: pre-wrap; }
+  .chat .msg.assistant { align-self: flex-start; background: var(--panel-2); border-bottom-left-radius: 4px; }
+  .chat .msg.assistant p { margin: 0 0 6px; } .chat .msg.assistant p:last-child { margin: 0; }
+  .chat .msg.assistant ul, .chat .msg.assistant ol { margin: 4px 0 6px; padding-left: 20px; }
+  .chat .msg.error { align-self: stretch; background: none; color: var(--live); font-size: 13px; padding: 0; }
+  .chat .msg.pensando { color: var(--text-2); font-style: italic; }
+  .chat .intro { color: var(--text-2); font-size: 13px; }
+  .chat .sugerencias { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chat .sugerencias button { border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 6px 12px;
+                              font-size: 13px; cursor: pointer; text-align: left; }
+  .chat .sugerencias button:hover { border-color: var(--acento); }
+  .chat form { display: flex; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--border); background: var(--panel-2); }
+  .chat textarea { flex: 1; resize: none; border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; background: var(--panel);
+                   font-size: 14px; max-height: 120px; }
+  .chat form button { background: var(--acento); color: #fff; border: 0; border-radius: 12px; padding: 0 16px; font-weight: 700; cursor: pointer; }
+  .chat form button:disabled { opacity: .5; cursor: default; }
+  .chat .contexto { font-size: 11.5px; color: var(--text-2); padding: 0 16px 8px; }
   .talon header { position: sticky; top: 0; background: var(--panel); padding: 14px 16px 12px; display: flex;
                   align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border); z-index: 1; }
   .talon h2 { margin: 0; font: 800 22px/1 var(--display); }
@@ -269,6 +330,8 @@
   @media (max-width: 860px) {
     .talon { inset: 0; width: auto; max-height: none; border-radius: 0; border: 0; }
     .talon-boton { right: 14px; bottom: 14px; }
+    .chat { inset: 0; width: auto; height: auto; border-radius: 0; border: 0; }
+    .chat-boton { left: 14px; bottom: 14px; }
   }
 
   /* Panel del jugador dentro de la tabla (celular): se abre debajo del jugador tocado */
@@ -333,6 +396,13 @@
 <div class="tip" id="tip"></div>
 <button class="talon-boton" id="abrirTalon" aria-controls="talon" aria-expanded="false">Talón <span class="n" id="talonN">0</span></button>
 <div class="talon" id="talon" role="dialog" aria-label="Talón" hidden></div>
+<button class="chat-boton" id="abrirChat" aria-controls="chat" aria-expanded="false">Consultar IA</button>
+<div class="chat" id="chat" role="dialog" aria-label="Chat IA" hidden>
+  <header><h2>Consultar IA</h2><span class="sup">combinadas</span><button data-limpiar>Borrar charla</button><button data-cerrar-chat>Cerrar</button></header>
+  <div class="mensajes" id="chatMensajes" aria-live="polite"></div>
+  <div class="contexto" id="chatContexto"></div>
+  <form id="chatForm"><textarea id="chatTexto" rows="2" placeholder="Ej: armame una combinada de 3 con más de 1.5 remates" aria-label="Tu pregunta"></textarea><button type="submit">Enviar</button></form>
+</div>
 <script>
 // Datos: API pública de ESPN, pedida directamente desde el navegador.
 const API = "https://site.api.espn.com/apis/site/v2";
@@ -651,11 +721,13 @@ function formaEquipo(teamId, antesDe, n) {
     previos = [...new Map(previos.map(e => [e.id, e])).values()]
       .sort((a, b) => b.date.localeCompare(a.date)).slice(0, n);
     const rs = await enParalelo(previos.map(e => () => resumen(e.id)), CONCURRENCIA);
-    const partidosEq = [], jugadores = new Map();
+    const partidosEq = [], jugadores = new Map(), planteles = [];
     for (const r of rs) {
       if (!r) continue;
       const m = r.meta, esLocal = m.homeId === teamId;
       partidosEq.push(m);
+      const conv = r.convocados?.[teamId] || [];
+      planteles.push({ id: m.id, fecha: m.fecha, comp: m.comp, conocido: conv.length >= 11, conv: new Set(conv.map(c => c.id)) });
       for (const f of r.filas.filter(f => f.teamId === teamId)) {
         let j = jugadores.get(f.athleteId);
         if (!j) jugadores.set(f.athleteId, j = { id: f.athleteId, nombre: f.jugador, pos: f.posicion, partidos: [] });
@@ -667,9 +739,69 @@ function formaEquipo(teamId, antesDe, n) {
         });
       }
     }
-    return { partidos: partidosEq, jugadores };
+    return { partidos: partidosEq, jugadores, planteles };
   })().catch(e => { delete equipos[clave]; throw e; });
 }
+
+// ---------- avisos del plantel (deducidos: ESPN no publica lesionados de fútbol) ----------
+// Devuelve Map(jugadorId → [{ tipo, texto }]). Tipos: baja, susp, rotar, volvio, hoy, banco.
+const ORDEN_AVISO = { baja: 0, susp: 1, banco: 2, rotar: 3, volvio: 4, hoy: 5 };
+const NOMBRE_AVISO = { baja: "Posible baja", susp: "Suspendido", rotar: "Puede rotar", volvio: "Volvió", hoy: "Convocado", banco: "Suplente hoy" };
+function avisosEquipo(teamId, forma, actual, fechaPartido, compPartido) {
+  const res = new Map();
+  const add = (id, tipo, texto) => { if (!res.has(id)) res.set(id, []); res.get(id).push({ tipo, texto }); };
+  const pl = forma.planteles || [];
+  if (!pl.length) return res;
+  const ult5 = pl.slice(0, 5).map(x => x.id);
+  const conv = actual?.convocados?.[teamId] || [];
+  const confirmada = conv.filter(c => c.titular).length >= 11;
+  const convHoy = new Map(conv.map(c => [c.id, c]));
+  const dias = (a, b) => (new Date(a) - new Date(b)) / 864e5;
+  const diasDesdeUlt = dias(fechaPartido, pl[0].fecha);
+
+  for (const j of forma.jugadores.values()) {
+    const porEv = new Map(j.partidos.map(x => [x.eventId, x]));
+    const titulares5 = ult5.filter(id => porEv.get(id)?.titular).length;
+    const habitual = titulares5 >= 3 || (titulares5 >= 2 && ult5.length <= 3);
+    // partidos seguidos (desde el último) en los que no estuvo en la lista, contando solo listas conocidas
+    let ausencias = 0;
+    for (const x of pl) { if (!x.conocido) break; if (x.conv.has(j.id)) break; ausencias++; }
+    const hoy = convHoy.get(j.id);
+
+    if (confirmada) {
+      if (hoy?.titular) add(j.id, "hoy", "Titular confirmado");
+      else if (hoy) { if (habitual) add(j.id, "banco", "Suele ser titular y hoy arranca en el banco"); }
+      else if (habitual) add(j.id, "baja", "Suele ser titular y no está en la lista de hoy");
+    } else if (conv.length >= 11 && habitual) {  // ESPN publicó convocados pero todavía no el 11
+      if (hoy) { if (ausencias > 0) add(j.id, "hoy", "Venía faltando y está en la lista de convocados de hoy"); }
+      else add(j.id, "baja", "Suele ser titular y no está en la lista de convocados de hoy");
+    } else if (habitual && ausencias > 0) {
+      add(j.id, "baja", ausencias >= 4 ? `No está en la lista hace ${ausencias} partidos (lesión larga, sanción o salida del club)`
+        : ausencias === 1 ? "Era titular fijo y no estuvo en la lista del último partido"
+        : `Era titular fijo y faltó a los últimos ${ausencias} partidos`);
+    } else if (pl[1]?.conocido && pl[0].conocido && pl[0].conv.has(j.id) && !pl[1].conv.has(j.id)) {
+      const previos = pl.slice(2, 6).filter(x => porEv.get(x.id)?.titular).length;
+      if (previos >= 2) add(j.id, "volvio", porEv.get(pl[0].id) ? "Volvió a jugar el último partido después de faltar" : "Volvió a la lista en el último partido");
+    }
+
+    const ult = porEv.get(pl[0].id);
+    if (ult?.stats?.rojas > 0) add(j.id, "susp", "Lo expulsaron en el último partido: probablemente cumpla fecha");
+    const amarillasComp = j.partidos.filter(x => x.comp === compPartido).slice(0, 6).reduce((a, x) => a + (x.stats.amarillas || 0), 0);
+    if (amarillasComp >= 4) add(j.id, "susp", `${amarillasComp} amarillas en sus últimos partidos de ${compPartido}: en riesgo de suspensión (depende del reglamento)`);
+
+    if (!confirmada && ult && diasDesdeUlt <= 3.5 && (ult.minutos ?? 0) >= 80)
+      add(j.id, "rotar", `Jugó ${ult.minutos}' hace ${Math.max(1, Math.round(diasDesdeUlt))} días`);
+    else if (!confirmada) {
+      const min7 = j.partidos.filter(x => dias(fechaPartido, x.fecha) <= 8).reduce((a, x) => a + (x.minutos || 0), 0);
+      if (min7 >= 200) add(j.id, "rotar", `Lleva ${min7}' en los últimos 8 días`);
+    }
+  }
+  // convocados hoy que no venían jugando (o vuelven de una baja)
+  if (confirmada) for (const c of conv) if (!res.has(c.id) && !forma.jugadores.has(c.id) && c.titular) add(c.id, "hoy", "Titular confirmado");
+  for (const l of res.values()) l.sort((a, b) => ORDEN_AVISO[a.tipo] - ORDEN_AVISO[b.tipo]);
+  return res;
+}
+const etiquetaAviso = a => `<span class="aviso a-${a.tipo}" title="${esc(a.texto)}">${NOMBRE_AVISO[a.tipo]}</span>`;
 
 // ---------- partidos de un jugador con cualquier equipo (últimos 5) ----------
 function partidosAtleta(id) {
@@ -836,12 +968,13 @@ async function pintarPrevia(p) {
   const teamId = vista.lado === "home" ? p.homeId : p.awayId;
   const nombreEq = vista.lado === "home" ? p.local : p.visitante;
   $("cuerpo").innerHTML = `<section class="xi" id="alineacion"><h4>Alineaciones</h4><div class="campo-espera ${esAngosto() ? "medio" : ""}"></div></section>`
-    + filtrosHTML(p) + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
+    + `<section class="avisos" id="avisos"></section>` + filtrosHTML(p) + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
   pintarAlineacion(p);
   const [forma, actual] = await Promise.all([formaEquipo(teamId, p.fecha, Math.max(vista.n, 10)), resumen(p.id).catch(() => null)]);
   if (activo !== p.id || vista.tab !== "previa" || (vista.lado === "home" ? p.homeId : p.awayId) !== teamId) return;
 
   const conv = actual?.convocados?.[teamId] || [];
+  const avisos = avisosEquipo(teamId, forma, actual, p.fecha, p.liga_nombre);
   const convMap = new Map(conv.map(c => [c.id, c]));
   const jugadores = new Map(forma.jugadores);
   for (const c of conv) if (!jugadores.has(c.id)) jugadores.set(c.id, { id: c.id, nombre: c.nombre, pos: c.pos, partidos: [] });
@@ -865,7 +998,7 @@ async function pintarPrevia(p) {
   const tabla = `<div class="tablewrap"><table data-tabla="plantel"><thead><tr>${cols.map(([c, t, cl]) =>
       `<th data-col="${c}" class="${cl || ""} ${c === col ? "ord" + (asc ? " asc" : "") : ""}">${t}</th>`).join("")}</tr></thead><tbody>
     ${filas.map(f => `<tr class="fila${f.j.id === vista.jugador ? " sel" : ""}" data-j="${esc(f.j.id)}" tabindex="0">
-      <td class="izq">${esc(f.j.nombre)}${f.hoy ? `<span class="hoy">${f.hoy.titular ? "Titular hoy" : "Convocado"}</span>` : ""}</td>
+      <td class="izq">${esc(f.j.nombre)}${f.hoy ? `<span class="hoy">${f.hoy.titular ? "Titular hoy" : "Convocado"}</span>` : ""}${(avisos.get(f.j.id) || []).filter(a => a.tipo !== "hoy").slice(0, 1).map(etiquetaAviso).join("")}</td>
       <td class="izq sup col-opc">${esc(f.j.pos === "SUB" ? "" : f.j.pos)}</td>
       <td>${f.pj}</td><td class="col-opc">${f.min != null ? Math.round(f.min) : "–"}</td>
       <td>${f.prom != null ? r1(f.prom) : "–"}</td>
@@ -873,7 +1006,7 @@ async function pintarPrevia(p) {
       <td class="izq">${f.ps.length ? sparkline(f.ps) : ""}</td></tr>${enTabla && f.j.id === vista.jugador ? PANEL_FILA : ""}`).join("")}
     </tbody></table></div>
     <p class="nota" style="margin-top:10px">La tabla usa los últimos ${forma.partidos.length} partidos de ${esc(nombreEq)} en todas sus competiciones; los minutos son aproximados.
-    ${conv.length ? "" : "La alineación aparece cuando ESPN la publica, cerca del inicio."}</p>`;
+    ${conv.length ? "" : `La alineación confirmada aparece cuando ESPN la publica, cerca del inicio${p.estado === "pre" && new Date(p.fecha) - Date.now() < 6 * 36e5 ? "; la página la busca sola cada 2 minutos" : ""}.`}</p>`;
 
   $("previa").innerHTML = (enTabla ? "" : `<section class="jugador" id="panelJugador"></section>`) + tabla;
   pintarJugador(jugadores.get(vista.jugador));
@@ -934,9 +1067,9 @@ function coloresEquipos(colA, colB) {
   return [a, candidatos.find(c => lejos(c, a)) || "f7f9f4"];
 }
 
-async function datosXI(p, teamId, forma, actual) {
+async function datosXI(p, teamId, forma, actual, avisos) {
   let xi = (actual?.convocados?.[teamId] || []).filter(j => j.titular);
-  let formacion = actual?.formaciones?.[teamId], fuente = "confirmada";
+  let formacion = actual?.formaciones?.[teamId], fuente = "confirmada", confirmada = xi.length >= 11;
   if (xi.length < 11 && forma.partidos.length) {
     const ult = forma.partidos[0];
     const r = await resumen(ult.id).catch(() => null);
@@ -944,7 +1077,7 @@ async function datosXI(p, teamId, forma, actual) {
     if (t.length >= 11) {
       xi = t; formacion = r.formaciones[teamId];
       const rival = ult.homeId === teamId ? ult.visitante : ult.local;
-      fuente = `probable: la del último partido, contra ${rival} el ${fmtCorta.format(new Date(ult.fecha))}`;
+      fuente = `último 11 inicial, contra ${rival} el ${fmtCorta.format(new Date(ult.fecha))}`;
     }
   }
   if (xi.length < 11) return null;
@@ -952,7 +1085,13 @@ async function datosXI(p, teamId, forma, actual) {
     const jj = forma.jugadores.get(j.id);
     return jj ? resumenStat(filtrarPartidos(jj.partidos)) : null;
   };
-  return { ubicados: ubicarXI(xi, formacion).map(j => ({ ...j, est: stats(j) })), formacion, fuente };
+  const dudas = [];
+  const ubicados = ubicarXI(xi, formacion).map(j => {
+    const av = (avisos?.get(j.id) || []).find(a => a.tipo !== "hoy" && a.tipo !== "volvio");
+    if (av && !confirmada) dudas.push(`${j.corto} (${NOMBRE_AVISO[av.tipo].toLowerCase()})`);
+    return { ...j, est: stats(j), aviso: av };
+  });
+  return { ubicados, formacion, fuente, confirmada, dudas };
 }
 
 function lineasCancha(W, H, medio) {
@@ -988,19 +1127,68 @@ function fichaJugador(j, x, y, color, lado, escala, W) {
     <text x="${x}" y="${y + 5 * escala}" text-anchor="middle" class="dorsal" style="fill:${tc};font-size:${f}px">${esc(j.dorsal ?? "")}</text>
     <text x="${tx}" y="${y + r + 17 * escala}" text-anchor="${ancla}" class="nombre" style="font-size:${f}px">${esc(j.corto)}</text>
     ${pct ? `<text x="${tx}" y="${y + r + 36 * escala}" text-anchor="${ancla}" class="pctxi" style="font-size:${f * 1.25}px">${pct}</text>` : ""}
+    ${j.aviso ? `<g class="marca m-${j.aviso.tipo}"><title>${esc(NOMBRE_AVISO[j.aviso.tipo])}: ${esc(j.aviso.texto)}</title>
+      <circle cx="${x + r * 0.78}" cy="${y - r * 0.78}" r="${8 * escala}"/>
+      <text x="${x + r * 0.78}" y="${y - r * 0.78 + 4 * escala}" text-anchor="middle" style="font-size:${11 * escala}px">${j.aviso.tipo === "rotar" ? "↻" : "!"}</text></g>` : ""}
   </g>`;
+}
+
+let tRefresco = null, avisosActuales = null;
+function programarRefresco(p, confirmadas) {
+  clearTimeout(tRefresco); tRefresco = null;
+  const faltan = new Date(p.fecha) - Date.now();
+  // antes del partido, si falta alguna alineación, se vuelve a consultar ESPN cada 2 minutos
+  if (p.estado !== "pre" || confirmadas || faltan > 6 * 36e5) return;
+  tRefresco = setTimeout(async () => {
+    if (activo !== p.id || vista.tab !== "previa" || !$("alineacion")) return;
+    delete resumenes[p.id];
+    const r = await resumen(p.id).catch(() => null);
+    const ok = id => (r?.convocados?.[id] || []).filter(j => j.titular).length >= 11;
+    if (activo !== p.id || vista.tab !== "previa") return;
+    if (ok(p.homeId) || ok(p.awayId)) pintarDetalle();  // salió una alineación: se repinta todo (tabla incluida)
+    else programarRefresco(p, false);
+  }, 120e3);
+}
+
+function pintarAvisos(p, avh, ava) {
+  const cont = $("avisos");
+  if (!cont) return;
+  const bloque = (eq, av, nom) => {
+    const items = [...av].filter(([, l]) => l.some(a => a.tipo !== "hoy"))
+      .sort((a, b) => ORDEN_AVISO[a[1][0].tipo] - ORDEN_AVISO[b[1][0].tipo]);
+    return `<div class="avisos-eq"><h5>${esc(eq)}</h5>${items.length ? `<ul>${items.map(([id, l]) => `<li>
+        <span class="quien">${esc(nom.get(id) || "")}</span>${l.filter(a => a.tipo !== "hoy").map(etiquetaAviso).join("")}
+        <span class="por">${esc(l.filter(a => a.tipo !== "hoy").map(a => a.texto).join(". "))}</span></li>`).join("")}</ul>`
+      : `<p class="sup">Sin avisos: el plantel viene completo.</p>`}</div>`;
+  };
+  const [eqs, avs, nms] = [[p.local, p.visitante], [avh.av, ava.av], [avh.nom, ava.nom]];
+  const orden = esAngosto() ? (vista.lado === "home" ? [0] : [1]) : [0, 1];
+  cont.innerHTML = `<h4>Avisos del plantel</h4><div class="avisos-grid">${orden.map(i => bloque(eqs[i], avs[i], nms[i])).join("")}</div>
+    <p class="nota">ESPN no publica lesionados de fútbol: estos avisos salen de las listas de convocados, los minutos y las tarjetas de los partidos anteriores. Confirmalo con las noticias antes de apostar.</p>`;
+  avisosActuales = { partido: p.id, home: avh, away: ava };
 }
 
 async function pintarAlineacion(p) {
   const n = Math.max(vista.n, 10);
   try {
     const [fh, fa, actual] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n), resumen(p.id).catch(() => null)]);
-    const [xh, xa] = await Promise.all([datosXI(p, p.homeId, fh, actual), datosXI(p, p.awayId, fa, actual)]);
+    const avh = avisosEquipo(p.homeId, fh, actual, p.fecha, p.liga_nombre), ava = avisosEquipo(p.awayId, fa, actual, p.fecha, p.liga_nombre);
+    const [xh, xa] = await Promise.all([datosXI(p, p.homeId, fh, actual, avh), datosXI(p, p.awayId, fa, actual, ava)]);
     const cont = $("alineacion");
     if (!cont || activo !== p.id) return;
+    const nom = (teamId, forma) => {
+      const m = new Map();
+      for (const j of forma.jugadores.values()) m.set(j.id, j.nombre);
+      for (const c of actual?.convocados?.[teamId] || []) if (!m.has(c.id)) m.set(c.id, c.nombre);
+      return m;
+    };
+    pintarAvisos(p, { av: avh, nom: nom(p.homeId, fh) }, { av: ava, nom: nom(p.awayId, fa) });
+    programarRefresco(p, !!(xh?.confirmada && xa?.confirmada));
     const [ch, ca] = coloresEquipos(actual?.colores?.[p.homeId], actual?.colores?.[p.awayId]);
     const stat = NOMBRE_STAT[vista.stat].toLowerCase();
-    const nota = (nombre, x) => x ? `<span><b>${esc(nombre)}</b>${x.formacion ? ` ${esc(x.formacion)}` : ""}, ${esc(x.fuente)}</span>`
+    const nota = (nombre, x) => x ? `<span class="xi-nota"><span class="estado-xi ${x.confirmada ? "conf" : "prob"}">${x.confirmada ? "Confirmada" : "Probable"}</span>
+        <b>${esc(nombre)}</b>${x.formacion ? ` ${esc(x.formacion)}` : ""}${x.confirmada ? "" : `: ${esc(x.fuente)}, hasta que ESPN publique la de hoy`}
+        ${x.dudas.length ? `<span class="dudas">En duda: ${esc(x.dudas.join(", "))}</span>` : ""}</span>`
                                   : `<span><b>${esc(nombre)}</b>: sin alineación disponible</span>`;
     let svg;
     if (esAngosto()) {  // celular: media cancha del equipo elegido
@@ -1238,7 +1426,7 @@ function pintarTalon() {
 function abrirTalon(abrir) {
   $("talon").hidden = !abrir;
   $("abrirTalon").setAttribute("aria-expanded", String(abrir));
-  if (abrir) pintarTalon();
+  if (abrir) { pintarTalon(); if (typeof abrirChat === "function" && !$("chat").hidden) abrirChat(false); }
 }
 
 $("abrirTalon").addEventListener("click", () => abrirTalon($("talon").hidden));
@@ -1265,6 +1453,143 @@ function refrescarBotonAgregar() {
   btn.textContent = ya ? "Actualizar en el talón" : "Agregar al talón";
 }
 pintarTalon();
+
+// ---------- chat IA (pasa por un worker de Cloudflare que guarda la clave de Anthropic) ----------
+const CHAT_URL = "";  // URL del worker, por ejemplo https://la-oficina-chat.TU-SUBDOMINIO.workers.dev
+const CLAVE_CHAT = "laoficina.chat";
+let chat = [], chatOcupado = false;
+try { chat = JSON.parse(sessionStorage.getItem(CLAVE_CHAT) || "[]"); } catch { chat = []; }
+const guardarChat = () => { try { sessionStorage.setItem(CLAVE_CHAT, JSON.stringify(chat.slice(-20))); } catch {} };
+
+// texto mínimo con formato: **negrita**, listas con "-" o "1." y párrafos
+function mdLite(t) {
+  const lineas = esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").split("\n");
+  let html = "", lista = null;
+  const cerrar = () => { if (lista) { html += `</${lista}>`; lista = null; } };
+  for (const l of lineas) {
+    const ul = l.match(/^\s*[-•*]\s+(.*)/), ol = l.match(/^\s*\d+[.)]\s+(.*)/);
+    if (ul || ol) {
+      const tipo = ul ? "ul" : "ol";
+      if (lista !== tipo) { cerrar(); html += `<${tipo}>`; lista = tipo; }
+      html += `<li>${(ul || ol)[1]}</li>`;
+    } else { cerrar(); if (l.trim()) html += `<p>${l}</p>`; }
+  }
+  cerrar();
+  return html;
+}
+
+// resumen por jugador de varias estadísticas, para que la IA arme combinadas con datos reales
+const LINEAS_IA = { tiros: [0.5, 1.5, 2.5], tiros_al_arco: [0.5, 1.5], faltas_cometidas: [0.5, 1.5], faltas_recibidas: [0.5, 1.5],
+                    amarillas: [0.5], goles: [0.5], asistencias: [0.5], atajadas: [1.5, 2.5] };
+function lineaJugadorIA(j, avisos, n) {
+  const ps = [...j.partidos].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, n);
+  if (!ps.length) return null;
+  const tit = ps.filter(x => x.titular).length;
+  const conMin = ps.filter(x => x.minutos != null);
+  const min = conMin.length ? Math.round(conMin.reduce((a, x) => a + x.minutos, 0) / conMin.length) : "?";
+  const partes = [];
+  for (const [st, lineas] of Object.entries(LINEAS_IA)) {
+    const vals = ps.map(x => x.stats[st]).filter(v => v != null);
+    if (!vals.length) continue;
+    const prom = vals.reduce((a, b) => a + b, 0) / vals.length;
+    if (st === "atajadas" && j.pos !== "G") continue;
+    if (prom === 0 && st !== "tiros") continue;  // ceros que no aportan: se omiten para achicar el contexto
+    const pcts = lineas.map(l => `+${l}: ${Math.round(vals.filter(v => v > l).length / vals.length * 100)}%`).join(" ");
+    partes.push(`${NOMBRE_STAT[st].toLowerCase()} prom ${r1(prom)} (${pcts}) últimos [${ps.map(x => x.stats[st] ?? "-").join(",")}]`);
+  }
+  const av = (avisos.get(j.id) || []).map(a => `${NOMBRE_AVISO[a.tipo].toUpperCase()}: ${a.texto}`).join("; ");
+  return `- ${j.nombre} (${j.pos && j.pos !== "SUB" ? j.pos : "?"}) | ${ps.length} PJ, ${tit} de titular, ${min}' por partido${av ? ` | AVISO ${av}` : ""}\n    ${partes.join(" · ")}`;
+}
+
+async function contextoIA() {
+  const partes = [`Hoy es ${fmtLarga.format(new Date())}. Estadística elegida en la página: ${NOMBRE_STAT[vista.stat]}, línea más de ${r1(vista.linea)}, últimos ${vista.n} partidos.`];
+  const p = partidos.find(x => x.id === activo);
+  if (p) {
+    const f = new Date(p.fecha), n = Math.max(vista.n, 10);
+    partes.push(`\nPARTIDO ABIERTO: ${p.local} (local) vs ${p.visitante}, ${p.liga_nombre}, ${fmtDia.format(f)} ${fmtHora.format(f)}. Estado: ${p.estado === "pre" ? "por jugarse" : p.detalle}${p.estado !== "pre" ? `, ${p.gl}-${p.gv}` : ""}.`);
+    try {
+      const [fh, fa, actual] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n), resumen(p.id).catch(() => null)]);
+      for (const [teamId, forma, nombre] of [[p.homeId, fh, p.local], [p.awayId, fa, p.visitante]]) {
+        const conv = actual?.convocados?.[teamId] || [];
+        const xi = conv.filter(c => c.titular);
+        const avisos = avisosEquipo(teamId, forma, actual, p.fecha, p.liga_nombre);
+        partes.push(`\n== ${nombre} == (últimos ${forma.partidos.length} partidos: ${forma.partidos.slice(0, 5).map(m => `${m.local} ${m.gl}-${m.gv} ${m.visitante}`).join("; ")})`);
+        partes.push(xi.length >= 11 ? `Alineación CONFIRMADA: ${xi.map(c => c.nombre).join(", ")}. Suplentes: ${conv.filter(c => !c.titular).map(c => c.nombre).join(", ")}`
+          : "Alineación todavía no confirmada (la página muestra el último 11 como probable).");
+        const filas = [...forma.jugadores.values()].filter(j => j.partidos.length >= 2)
+          .sort((a, b) => b.partidos.length - a.partidos.length).slice(0, 22)
+          .map(j => lineaJugadorIA(j, avisos, vista.n)).filter(Boolean);
+        partes.push(filas.join("\n"));
+      }
+    } catch { partes.push("(No se pudieron traer los datos de ESPN de este partido.)"); }
+  } else {
+    partes.push("\nNo hay ningún partido abierto en la página. Si el usuario pregunta por jugadores, sugerile abrir el partido para tener datos.");
+  }
+  const otros = partidos.filter(x => x.id !== activo && x.estado === "pre").slice(0, 30);
+  if (otros.length) partes.push(`\nOtros partidos cargados por jugarse: ${otros.map(x => `${x.local} vs ${x.visitante} (${x.liga_nombre})`).join("; ")}.`);
+  partes.push(talon.length ? `\nTALÓN ACTUAL DEL USUARIO:\n${textoTalon()}` : "\nEl talón del usuario está vacío.");
+  return partes.join("\n");
+}
+
+function pintarChat() {
+  const cont = $("chatMensajes");
+  const p = partidos.find(x => x.id === activo);
+  $("chatContexto").textContent = p ? `Usa los datos de ${p.local} vs ${p.visitante} y tu talón.` : "Abrí un partido para que la IA use sus datos.";
+  if (!CHAT_URL) {
+    cont.innerHTML = `<div class="intro">El chat todavía no está conectado: falta poner la dirección del servidor que guarda la clave de la IA.</div>`;
+    $("chatForm").querySelector("button").disabled = true;
+    return;
+  }
+  const sug = p ? [`Armame una combinada de 3 para ${p.local} vs ${p.visitante}`, "¿Quién tiene más chances de recibir faltas?", "¿Hay algún titular en duda?"]
+                : ["¿Cómo armo una buena combinada?", "¿Qué es la cuota justa?"];
+  if (talon.length) sug.push("¿Qué riesgos tiene mi talón?");
+  cont.innerHTML = (chat.length ? "" : `<div class="intro">Preguntá lo que quieras sobre el partido abierto o tu talón. La IA ve los mismos números que la página (historial de los últimos partidos, avisos de bajas y rotación), no las cuotas de las casas.
+      <div class="sugerencias">${sug.map(t => `<button type="button" data-sug="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`)
+    + chat.map(m => `<div class="msg ${m.role}">${m.role === "assistant" ? mdLite(m.content) : esc(m.content)}</div>`).join("")
+    + (chatOcupado ? `<div class="msg assistant pensando">Pensando…</div>` : "");
+  cont.scrollTop = cont.scrollHeight;
+  $("chatForm").querySelector("button").disabled = chatOcupado;
+}
+
+async function enviarChat(texto) {
+  texto = texto.trim();
+  if (!texto || chatOcupado || !CHAT_URL) return;
+  chat.push({ role: "user", content: texto.slice(0, 2000) });
+  chatOcupado = true; guardarChat(); pintarChat();
+  let error = null;
+  try {
+    const contexto = await contextoIA();
+    const r = await fetch(CHAT_URL, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chat.slice(-12), contexto }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.texto) error = d.error || `El servidor respondió ${r.status}.`;
+    else chat.push({ role: "assistant", content: d.texto });
+  } catch { error = "No se pudo conectar con el chat. Revisá tu conexión."; }
+  if (error) chat.pop();  // la pregunta vuelve al cuadro de texto para reintentar
+  chatOcupado = false; guardarChat(); pintarChat();
+  if (error) {
+    $("chatTexto").value = texto;
+    $("chatMensajes").insertAdjacentHTML("beforeend", `<div class="msg error">${esc(error)}</div>`);
+  }
+}
+
+function abrirChat(abrir) {
+  $("chat").hidden = !abrir;
+  $("abrirChat").setAttribute("aria-expanded", String(abrir));
+  if (abrir) { abrirTalon(false); pintarChat(); $("chatTexto").focus(); }
+}
+$("abrirChat").addEventListener("click", () => abrirChat($("chat").hidden));
+$("chat").addEventListener("click", e => {
+  if (e.target.closest("[data-cerrar-chat]")) { abrirChat(false); return; }
+  if (e.target.closest("[data-limpiar]")) { if (!chatOcupado) { chat = []; guardarChat(); pintarChat(); } return; }
+  const s = e.target.closest("[data-sug]");
+  if (s) enviarChat(s.dataset.sug);
+});
+$("chatForm").addEventListener("submit", e => { e.preventDefault(); const t = $("chatTexto").value; $("chatTexto").value = ""; enviarChat(t); });
+$("chatTexto").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chatForm").requestSubmit(); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("chat").hidden) abrirChat(false); });
 
 // ---------- música de fondo ----------
 // Los navegadores no permiten sonar sin una acción del usuario: arranca con el botón,
