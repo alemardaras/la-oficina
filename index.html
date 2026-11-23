@@ -750,14 +750,15 @@ const NOMBRE_AVISO = { baja: "Posible baja", susp: "Suspendido", rotar: "Puede r
 function avisosEquipo(teamId, forma, actual, fechaPartido, compPartido) {
   const res = new Map();
   const add = (id, tipo, texto) => { if (!res.has(id)) res.set(id, []); res.get(id).push({ tipo, texto }); };
-  const pl = forma.planteles || [];
-  if (!pl.length) return res;
+  const todos = forma.planteles || [];
+  if (!todos.length) return res;
+  const pl = todos.filter(x => x.conocido).length ? todos.filter(x => x.conocido) : todos;  // partidos con lista de convocados
   const ult5 = pl.slice(0, 5).map(x => x.id);
   const conv = actual?.convocados?.[teamId] || [];
   const confirmada = conv.filter(c => c.titular).length >= 11;
   const convHoy = new Map(conv.map(c => [c.id, c]));
   const dias = (a, b) => (new Date(a) - new Date(b)) / 864e5;
-  const diasDesdeUlt = dias(fechaPartido, pl[0].fecha);
+  const diasDesdeUlt = dias(fechaPartido, todos[0].fecha);
 
   for (const j of forma.jugadores.values()) {
     const porEv = new Map(j.partidos.map(x => [x.eventId, x]));
@@ -784,7 +785,7 @@ function avisosEquipo(teamId, forma, actual, fechaPartido, compPartido) {
       if (previos >= 2) add(j.id, "volvio", porEv.get(pl[0].id) ? "Volvió a jugar el último partido después de faltar" : "Volvió a la lista en el último partido");
     }
 
-    const ult = porEv.get(pl[0].id);
+    const ult = porEv.get(todos[0].id) || porEv.get(pl[0].id);
     if (ult?.stats?.rojas > 0) add(j.id, "susp", "Lo expulsaron en el último partido: probablemente cumpla fecha");
     const amarillasComp = j.partidos.filter(x => x.comp === compPartido).slice(0, 6).reduce((a, x) => a + (x.stats.amarillas || 0), 0);
     if (amarillasComp >= 4) add(j.id, "susp", `${amarillasComp} amarillas en sus últimos partidos de ${compPartido}: en riesgo de suspensión (depende del reglamento)`);
@@ -1071,13 +1072,18 @@ async function datosXI(p, teamId, forma, actual, avisos) {
   let xi = (actual?.convocados?.[teamId] || []).filter(j => j.titular);
   let formacion = actual?.formaciones?.[teamId], fuente = "confirmada", confirmada = xi.length >= 11;
   if (xi.length < 11 && forma.partidos.length) {
-    const ult = forma.partidos[0];
-    const r = await resumen(ult.id).catch(() => null);
-    const t = (r?.convocados?.[teamId] || []).filter(j => j.titular);
-    if (t.length >= 11) {
+    // el último partido con alineación publicada; los amistosos (que ESPN a veces no detalla) solo si no hay otro
+    const recientes = forma.partidos.slice(0, 6);
+    const candidatos = [...recientes.filter(m => !/friendl|amistos/i.test(m.comp)), ...recientes.filter(m => /friendl|amistos/i.test(m.comp))];
+    for (const ult of candidatos) {
+      const r = await resumen(ult.id).catch(() => null);
+      const t = (r?.convocados?.[teamId] || []).filter(j => j.titular);
+      if (t.length < 11) continue;
       xi = t; formacion = r.formaciones[teamId];
       const rival = ult.homeId === teamId ? ult.visitante : ult.local;
-      fuente = `último 11 inicial, contra ${rival} el ${fmtCorta.format(new Date(ult.fecha))}`;
+      fuente = `último 11 inicial con datos, contra ${rival} el ${fmtCorta.format(new Date(ult.fecha))}`
+        + (ult.id !== forma.partidos[0].id ? ` (del partido más reciente, ${fmtCorta.format(new Date(forma.partidos[0].fecha))}, ESPN no tiene alineación)` : "");
+      break;
     }
   }
   if (xi.length < 11) return null;
