@@ -234,6 +234,56 @@
   .campo .m-baja circle, .campo .m-susp circle { fill: var(--live); }
   .campo .m-rotar circle, .campo .m-banco circle { fill: #c98a00; }
 
+  /* ---------- picks ---------- */
+  button.logo { background: none; border: 0; color: inherit; padding: 0; cursor: pointer; font: inherit; font-weight: 800; font-size: 19px; }
+  .picks { margin-bottom: 24px; }
+  .picks:empty { display: none; }
+  .picks-titulo { display: flex; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .picks-titulo h4 { margin: 0; display: flex; align-items: center; gap: 8px; }
+  .top3 { background: var(--amarilla); color: #1a1a1a; font: 800 12px var(--ui); letter-spacing: .04em; text-transform: uppercase;
+          padding: 3px 9px; border-radius: 999px; }
+  .picks-eq + .picks-eq { margin-top: 14px; }
+  .picks-eq h5 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 14px; }
+  .picks-eq h5 .esc { width: 20px; height: 20px; }
+  .picks-fila { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .picks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .pick { display: flex; flex-direction: column; gap: 6px; text-align: left; cursor: pointer; min-width: 0;
+          background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px 10px; box-shadow: var(--sombra);
+          transition: border-color .15s, transform .15s; }
+  .pick:hover { border-color: var(--acento); }
+  @media (prefers-reduced-motion: no-preference) { .pick:hover { transform: translateY(-2px); } }
+  .pick-cab { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .pick-cab .esc { width: 26px; height: 26px; flex: none; }
+  .pick-rank { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--text); color: var(--panel);
+               display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+  .pick-quien { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+  .pick-quien b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pick-quien small { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pick-partido { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pick-mercado { font-size: 13px; font-weight: 700; }
+  .pick-mercado .aviso { margin-left: 6px; }
+  .pick-datos { display: flex; align-items: center; gap: 10px; }
+  .pick-pct { font: 800 32px/1 var(--display); color: var(--acento); letter-spacing: -.02em; }
+  .pick-k { font-size: 12px; color: var(--text-2); line-height: 1.35; }
+  .pick svg { display: block; width: 100%; height: auto; }
+  .pick svg text { fill: var(--text-2); font: 10px var(--ui); }
+  .inicio-cab { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 14px; }
+  .inicio-cab h2 { margin: 0 0 4px; font: 800 24px/1.1 var(--display); }
+  .inicio-cab p { margin: 0; max-width: 60ch; }
+  .inicio-cab .filtros { margin: 0; }
+  .progreso { margin: 0 0 10px; }
+  .picks-movil { display: none; min-width: 0; }
+  aside, main { min-width: 0; }
+  @media (max-width: 860px) {
+    .picks-fila { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+    .picks-fila .pick { flex: 0 0 78%; scroll-snap-align: start; }
+    body:not(.ver-detalle) .picks-movil { display: block; margin-bottom: 14px; }
+    .picks-movil .picks-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; padding-bottom: 4px; }
+    .picks-movil .pick { flex: 0 0 80%; scroll-snap-align: start; }
+    .picks-movil .inicio-cab h2 { font-size: 20px; }
+    .picks-movil .vacio { padding: 12px 0; }
+  }
+
   /* ---------- avisos del plantel ---------- */
   .avisos { margin-bottom: 22px; }
   .avisos:empty { display: none; }
@@ -254,84 +304,8 @@
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .a-rotar, :root:not([data-theme="light"]) .a-banco { color: #f2c230; } }
   @media (max-width: 760px) { .avisos-grid { grid-template-columns: 1fr; } }
 
-  /* ---------- talón ---------- */
-  .agregar { margin-top: 16px; background: var(--acento); color: #fff; border: 0; border-radius: 999px;
-             padding: 9px 16px; font-weight: 700; cursor: pointer; }
-  .agregar.ya { background: none; color: var(--acento); box-shadow: inset 0 0 0 1.5px var(--acento); }
-  .talon-boton { position: fixed; right: 18px; bottom: 18px; z-index: 20; display: flex; align-items: center; gap: 10px;
-                 background: var(--acento); color: #fff; border: 0; border-radius: 999px; padding: 11px 16px 11px 20px;
-                 font: 700 15px var(--ui); cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
-  .talon-boton .n { background: #fff; color: var(--acento); border-radius: 999px; min-width: 24px; height: 24px;
-                    display: grid; place-items: center; font-size: 13px; font-weight: 800; padding: 0 7px; }
-  @media (prefers-reduced-motion: no-preference) { .talon-boton.pulso { animation: pulso .45s ease-out; }
-    @keyframes pulso { 40% { transform: scale(1.12); } } }
-  .talon { position: fixed; right: 18px; bottom: 78px; z-index: 21; width: min(420px, calc(100vw - 36px));
-           max-height: calc(100vh - 110px); overflow-y: auto; background: var(--panel); color: var(--text);
-           border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 14px 40px rgba(0, 0, 0, .25); }
-  .talon[hidden] { display: none; }
 
-  /* ---------- chat IA ---------- */
-  .chat-boton { position: fixed; left: 18px; bottom: 18px; z-index: 20; background: var(--top); color: #fff; border: 0;
-                border-radius: 999px; padding: 11px 18px; font: 700 15px var(--ui); cursor: pointer; box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
-  .chat { position: fixed; left: 18px; bottom: 78px; z-index: 21; width: min(440px, calc(100vw - 36px));
-          height: min(640px, calc(100vh - 110px)); display: flex; flex-direction: column; background: var(--panel); color: var(--text);
-          border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 14px 40px rgba(0, 0, 0, .25); overflow: hidden; }
-  .chat[hidden] { display: none; }
-  .chat header { padding: 14px 16px 10px; display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--border); }
-  .chat h2 { margin: 0; font: 800 20px/1 var(--display); }
-  .chat header .sup { flex: 1; }
-  .chat header button { background: none; border: 0; font-size: 13px; color: var(--text-2); cursor: pointer; text-decoration: underline; }
-  .chat .mensajes { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .chat .msg { max-width: 92%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; overflow-wrap: anywhere; }
-  .chat .msg.user { align-self: flex-end; background: var(--acento); color: #fff; border-bottom-right-radius: 4px; white-space: pre-wrap; }
-  .chat .msg.assistant { align-self: flex-start; background: var(--panel-2); border-bottom-left-radius: 4px; }
-  .chat .msg.assistant p { margin: 0 0 6px; } .chat .msg.assistant p:last-child { margin: 0; }
-  .chat .msg.assistant ul, .chat .msg.assistant ol { margin: 4px 0 6px; padding-left: 20px; }
-  .chat .msg.error { align-self: stretch; background: none; color: var(--live); font-size: 13px; padding: 0; }
-  .chat .msg.pensando { color: var(--text-2); font-style: italic; }
-  .chat .intro { color: var(--text-2); font-size: 13px; }
-  .chat .sugerencias { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .chat .sugerencias button { border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 6px 12px;
-                              font-size: 13px; cursor: pointer; text-align: left; }
-  .chat .sugerencias button:hover { border-color: var(--acento); }
-  .chat form { display: flex; gap: 8px; padding: 10px 12px 12px; border-top: 1px solid var(--border); background: var(--panel-2); }
-  .chat textarea { flex: 1; resize: none; border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; background: var(--panel);
-                   font-size: 14px; max-height: 120px; }
-  .chat form button { background: var(--acento); color: #fff; border: 0; border-radius: 12px; padding: 0 16px; font-weight: 700; cursor: pointer; }
-  .chat form button:disabled { opacity: .5; cursor: default; }
-  .chat .contexto { font-size: 11.5px; color: var(--text-2); padding: 0 16px 8px; }
-  .talon header { position: sticky; top: 0; background: var(--panel); padding: 14px 16px 12px; display: flex;
-                  align-items: baseline; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border); z-index: 1; }
-  .talon h2 { margin: 0; font: 800 22px/1 var(--display); }
-  .talon header .cerrar { background: none; border: 0; font-size: 13px; color: var(--text-2); cursor: pointer; text-decoration: underline; }
-  .seleccion { padding: 14px 16px 12px; border-bottom: 1px solid var(--border); position: relative; }
-  .seleccion .quien { font: 700 17px/1.2 var(--display); padding-right: 64px; }
-  .seleccion .donde { font-size: 12px; color: var(--text-2); margin-top: 2px; }
-  .seleccion .linea { margin-top: 8px; font-weight: 600; }
-  .seleccion .quitar { position: absolute; top: 14px; right: 14px; background: none; border: 0; color: var(--text-2);
-                       font-size: 12px; cursor: pointer; text-decoration: underline; }
-  .seleccion .datos { display: flex; gap: 18px; align-items: flex-end; margin-top: 6px; flex-wrap: wrap; }
-  .seleccion .datos .v { font: 800 26px/1 var(--display); color: var(--acento); }
-  .seleccion .datos .v.chica { font-size: 18px; color: var(--text); }
-  .seleccion .datos .k { font-size: 12px; color: var(--text-2); }
-  .seleccion svg { display: block; width: 100%; height: auto; margin-top: 10px; }
-  .seleccion svg text { fill: var(--text-2); font: 11px var(--ui); }
-  .seleccion svg text.val { fill: var(--text); font-weight: 700; }
-  .talon .pie { padding: 14px 16px 16px; background: var(--panel-2); }
-  .talon .pie .total { display: flex; gap: 22px; align-items: flex-end; }
-  .talon .pie .v { font: 800 28px/1 var(--display); }
-  .talon .pie .k { font-size: 12px; color: var(--text-2); }
-  .talon .pie p { font-size: 12px; color: var(--text-2); margin: 10px 0 12px; }
-  .talon .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
-  .talon .acciones button, .talon .acciones a { border: 1px solid var(--border); background: var(--panel); color: var(--text);
-            border-radius: 999px; padding: 7px 14px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 13px; }
-  .talon .acciones .principal { background: var(--acento); border-color: var(--acento); color: #fff; }
-  .talon .vacio { padding: 24px 16px; }
   @media (max-width: 860px) {
-    .talon { inset: 0; width: auto; max-height: none; border-radius: 0; border: 0; }
-    .talon-boton { right: 14px; bottom: 14px; }
-    .chat { inset: 0; width: auto; height: auto; border-radius: 0; border: 0; }
-    .chat-boton { left: 14px; bottom: 14px; }
   }
 
   /* Panel del jugador dentro de la tabla (celular): se abre debajo del jugador tocado */
@@ -374,7 +348,7 @@
 <body>
 <header class="topbar">
   <div class="in">
-    <div class="logo"><span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.5" y="8" width="3" height="6.5" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10.5" rx="1" fill="#fff"/><rect x="11.5" y="1.5" width="3" height="13" rx="1" fill="#fff"/></svg></span>La Oficina <span class="tag">STATS</span></div>
+    <button class="logo" id="irInicio" title="Picks del día"><span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.5" y="8" width="3" height="6.5" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10.5" rx="1" fill="#fff"/><rect x="11.5" y="1.5" width="3" height="13" rx="1" fill="#fff"/></svg></span>La Oficina <span class="tag">STATS</span></button>
     <label class="buscador"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M11 11l3.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg><input id="buscar" type="search" placeholder="Buscar equipo o liga" aria-label="Buscar equipo o liga"></label>
     <button id="musicaBtn" class="musica" aria-pressed="false">Poner música</button>
     <audio id="musica" src="cancion.mp3" loop preload="none"></audio>
@@ -383,6 +357,7 @@
 <div class="franja"><nav class="destacados" id="destacados" aria-label="Partidos destacados"></nav></div>
 <div class="layout">
   <aside>
+    <section class="picks-movil" id="picksMovil"></section>
     <div class="card panel-carga">
       <div class="fechas"><label>Desde <input type="date" id="desde"></label><label>Hasta <input type="date" id="hasta"></label></div>
       <label>Ligas <select id="grupo"></select></label>
@@ -394,15 +369,6 @@
   <main id="detalle"><div class="vacio">Elegí un partido de la lista para ver la forma de cada jugador.</div></main>
 </div>
 <div class="tip" id="tip"></div>
-<button class="talon-boton" id="abrirTalon" aria-controls="talon" aria-expanded="false">Talón <span class="n" id="talonN">0</span></button>
-<div class="talon" id="talon" role="dialog" aria-label="Talón" hidden></div>
-<button class="chat-boton" id="abrirChat" aria-controls="chat" aria-expanded="false">Consultar IA</button>
-<div class="chat" id="chat" role="dialog" aria-label="Chat IA" hidden>
-  <header><h2>Consultar IA</h2><span class="sup">combinadas</span><button data-limpiar>Borrar charla</button><button data-cerrar-chat>Cerrar</button></header>
-  <div class="mensajes" id="chatMensajes" aria-live="polite"></div>
-  <div class="contexto" id="chatContexto"></div>
-  <form id="chatForm"><textarea id="chatTexto" rows="2" placeholder="Ej: armame una combinada de 3 con más de 1.5 remates" aria-label="Tu pregunta"></textarea><button type="submit">Enviar</button></form>
-</div>
 <script>
 // Datos: API pública de ESPN, pedida directamente desde el navegador.
 const API = "https://site.api.espn.com/apis/site/v2";
@@ -449,7 +415,7 @@ const r1 = x => (Math.round(x * 10) / 10).toLocaleString("es-AR");
 let partidos = [], activo = null;
 const resumenes = {}, equipos = {}, atletas = {};
 const vista = { tab: null, lado: "home", stat: "tiros", linea: 0.5, n: 10, soloTitular: false, jugador: null,
-                ordenPlantel: { col: "pct", asc: false }, ordenPartido: { col: "tiros", asc: false } };
+                ordenPlantel: { col: "prom", asc: false }, ordenPartido: { col: "tiros", asc: false } };
 
 // ---------- red ----------
 async function getJSON(url, intentos = 3) {
@@ -519,6 +485,7 @@ async function cargarPartidos() {
   $("cargar").disabled = false;
   pintarLista();
   pintarDestacados();
+  if (!activo || esAngosto()) pintarInicio();
 }
 
 const cap = t => t ? t[0].toUpperCase() + t.slice(1) : t;
@@ -804,6 +771,132 @@ function avisosEquipo(teamId, forma, actual, fechaPartido, compPartido) {
 }
 const etiquetaAviso = a => `<span class="aviso a-${a.tipo}" title="${esc(a.texto)}">${NOMBRE_AVISO[a.tipo]}</span>`;
 
+// ---------- picks: los 3 jugadores más firmes de cada equipo según el filtro elegido ----------
+const cuotaJusta = prob => prob > 0 ? (1 / prob).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "–";
+const textoMercado = () => `Más de ${r1(vista.linea)} ${NOMBRE_STAT[vista.stat].toLowerCase()}`;
+function picksEquipo(p, lado, forma, actual) {
+  const teamId = lado === "home" ? p.homeId : p.awayId;
+  const avisos = avisosEquipo(teamId, forma, actual, p.fecha, p.liga_nombre);
+  const conv = actual?.convocados?.[teamId] || [];
+  const confirmada = conv.filter(c => c.titular).length >= 11;
+  const titularHoy = new Set(conv.filter(c => c.titular).map(c => c.id)), enLista = new Set(conv.map(c => c.id));
+  const ult3 = forma.partidos.slice(0, 3).map(m => m.id);
+  const minN = Math.min(5, Math.max(3, forma.partidos.length));
+  const cands = [];
+  for (const j of forma.jugadores.values()) {
+    const av = avisos.get(j.id) || [];
+    if (av.some(a => a.tipo === "baja" || a.tipo === "susp")) continue;
+    if (confirmada ? !titularHoy.has(j.id) : conv.length >= 11 && !enLista.has(j.id)) continue;
+    if (!confirmada && !j.partidos.some(x => ult3.includes(x.eventId))) continue;  // tiene que venir jugando
+    const ps = filtrarPartidos(j.partidos), r = resumenStat(ps);
+    if (r.n < minN || !r.sup) continue;
+    if (ps.filter(x => x.titular).length < ps.length / 2) continue;  // suplentes habituales afuera
+    cands.push({ p, lado, j, ps, r, av, equipo: lado === "home" ? p.local : p.visitante, logo: lado === "home" ? p.logoL : p.logoV });
+  }
+  return cands.sort((a, b) => b.r.pct - a.r.pct || b.r.prom - a.r.prom || b.r.n - a.r.n).slice(0, 3);
+}
+
+function barrasMini(ps, linea) {
+  const vals = [...ps].reverse().map(x => x.stats[vista.stat]);
+  const W = 240, H = 50, base = 36, alto = 32;
+  const max = Math.max(linea + 0.5, ...vals.map(v => v ?? 0));
+  const band = W / Math.max(vals.length, 1), bw = Math.min(16, band * 0.62);
+  let g = "";
+  vals.forEach((v, i) => {
+    const h = Math.max(((v ?? 0) / max) * alto, 2);
+    g += `<rect x="${i * band + (band - bw) / 2}" y="${base - h}" width="${bw}" height="${h}" rx="2" fill="var(${(v ?? 0) > linea ? "--hit" : "--miss"})"/>
+      <text x="${i * band + band / 2}" y="${H - 2}" text-anchor="middle">${v ?? "–"}</text>`;
+  });
+  const ly = base - (linea / max) * alto;
+  g += `<line x1="0" x2="${W}" y1="${ly}" y2="${ly}" stroke="var(--text)" stroke-width="1.2" stroke-dasharray="3 3"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Últimos partidos, del más antiguo al más reciente: ${vals.map(v => v ?? "sin dato").join(", ")}">${g}</svg>`;
+}
+
+function cardPick(k, rank, conPartido) {
+  const { p, j, ps, r } = k, f = new Date(p.fecha);
+  const cuando = isoLocal(f) === isoLocal(new Date()) ? `Hoy ${fmtHora.format(f)}` : `${fmtCorta.format(f)} ${fmtHora.format(f)}`;
+  const rival = k.lado === "home" ? p.visitante : p.local;
+  const extra = k.av.filter(a => ["rotar", "volvio", "banco"].includes(a.tipo)).slice(0, 1).map(etiquetaAviso).join("");
+  return `<button class="pick" data-pick-partido="${esc(p.id)}" data-pick-lado="${k.lado}" data-pick-j="${esc(j.id)}">
+    <span class="pick-cab"><span class="pick-rank">${rank}</span>${escudo(k.logo)}
+      <span class="pick-quien"><b>${esc(j.nombre)}</b><small>${esc(k.equipo)}${j.pos && j.pos !== "SUB" ? ` · ${esc(j.pos)}` : ""}</small></span></span>
+    ${conPartido ? `<span class="pick-partido">vs ${esc(rival)} · ${esc(p.liga_nombre)} · ${cuando}</span>` : ""}
+    <span class="pick-mercado">${textoMercado()}${extra}</span>
+    <span class="pick-datos"><span class="pick-pct">${Math.round(r.pct * 100)}%</span>
+      <span class="pick-k">superó en ${r.sup} de ${r.n}<br>promedio ${r1(r.prom)} · cuota justa ${cuotaJusta(r.pct)}</span></span>
+    ${barrasMini(ps, vista.linea)}
+  </button>`;
+}
+
+function filtrosPicksHTML(idStat, idLinea) {
+  const opt = (arr, val) => arr.map(([v, t]) => `<option value="${v}"${String(v) === String(val) ? " selected" : ""}>${t}</option>`).join("");
+  return `<label>Estadística <select id="${idStat}">${opt(Object.entries(NOMBRE_STAT), vista.stat)}</select></label>
+    <label>Línea <select id="${idLinea}">${opt([0.5, 1.5, 2.5, 3.5, 4.5].map(v => [v, `Más de ${r1(v)}`]), vista.linea)}</select></label>`;
+}
+
+async function pintarPicksPartido(p) {
+  const n = Math.max(vista.n, 10);
+  try {
+    const [fh, fa, actual] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n), resumen(p.id).catch(() => null)]);
+    const cont = $("picks");
+    if (!cont || activo !== p.id) return;
+    const bloque = (lado, forma) => {
+      const ks = picksEquipo(p, lado, forma, actual);
+      return `<div class="picks-eq"><h5>${escudo(lado === "home" ? p.logoL : p.logoV)}${esc(lado === "home" ? p.local : p.visitante)}</h5>
+        <div class="picks-fila">${ks.length ? ks.map((k, i) => cardPick(k, i + 1, false)).join("")
+          : `<p class="sup">Ningún titular superó la línea con suficientes partidos.</p>`}</div></div>`;
+    };
+    cont.innerHTML = `<div class="picks-titulo"><h4><span class="top3">Top 3</span> Picks del partido</h4>
+        <span class="sup">${textoMercado()}, últimos ${vista.n} partidos${vista.soloTitular ? ", solo como titular" : ""}. Sin jugadores en duda.</span></div>
+      ${bloque("home", fh)}${bloque("away", fa)}`;
+  } catch {
+    const cont = $("picks"); if (cont) cont.innerHTML = "";
+  }
+}
+
+// picks del día: los partidos destacados que todavía no empezaron
+let genInicio = 0;
+async function pintarInicio() {
+  const cont = esAngosto() ? $("picksMovil") : $("detalle");
+  if (!esAngosto() && activo) return;
+  const gen = ++genInicio;
+  const ps = destacados(10).filter(p => p.estado === "pre");
+  const cab = `<div class="inicio-cab"><div><h2>Picks del día</h2>
+      <p class="sup">Los jugadores que más veces superaron la línea en los partidos destacados que vienen. Tocá una pick para ver el partido.</p></div>
+      <div class="filtros">${filtrosPicksHTML("iStat", "iLinea")}</div></div>`;
+  if (!ps.length) {
+    cont.innerHTML = cab + `<div class="vacio">${partidos.length ? "No quedan partidos destacados por jugarse en estas fechas. Probá cargar los días siguientes." : "Cargando partidos…"}</div>`;
+    return;
+  }
+  const todos = [];
+  let hechos = 0;
+  const pintar = () => {
+    if (gen !== genInicio || (cont === $("detalle") && activo)) return;  // ya se abrió un partido: no pisar el detalle
+    const orden = [...todos].sort((a, b) => b.r.pct - a.r.pct || b.r.n - a.r.n || b.r.prom - a.r.prom).slice(0, 12);
+    cont.innerHTML = cab + (hechos < ps.length ? `<p class="sup progreso">Analizando partidos (${hechos} de ${ps.length})…</p>` : "")
+      + (orden.length ? `<div class="picks-grid">${orden.map((k, i) => cardPick(k, i + 1, true)).join("")}</div>`
+        : hechos < ps.length ? "" : `<div class="vacio">Con esta línea nadie se destaca. Probá con una línea más baja.</div>`);
+  };
+  pintar();
+  const n = Math.max(vista.n, 10);
+  await enParalelo(ps.map(p => async () => {
+    try {
+      const [fh, fa, actual] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n), resumen(p.id).catch(() => null)]);
+      todos.push(...picksEquipo(p, "home", fh, actual), ...picksEquipo(p, "away", fa, actual));
+    } catch {}
+    hechos++; pintar();
+  }), 2);
+}
+
+function irAPick(b) {
+  const id = b.dataset.pickPartido, lado = b.dataset.pickLado, jid = b.dataset.pickJ;
+  if (activo !== id) abrirPartido(id);
+  vista.lado = lado; vista.jugador = jid; vista.tab = "previa";
+  pintarDetalle().then(() => setTimeout(() => {
+    (document.querySelector("tr.fila.sel") || $("panelJugador"))?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, 400));
+}
+
 // ---------- partidos de un jugador con cualquier equipo (últimos 5) ----------
 function partidosAtleta(id) {
   return atletas[id] ??= getJSON(`${API_ATLETA}/${id}/overview`).then(d => {
@@ -920,7 +1013,7 @@ function cabecera(p) {
 
 async function pintarDetalle() {
   const p = partidos.find(x => x.id === activo), det = $("detalle");
-  if (!p) { det.innerHTML = `<div class="vacio">Elegí un partido de la lista para ver la forma de cada jugador.</div>`; return; }
+  if (!p) { pintarInicio(); return; }
   if (!vista.tab || (vista.tab === "partido" && p.estado === "pre")) vista.tab = "previa";
   det.innerHTML = cabecera(p) + `<div id="cuerpo"><div class="vacio">Cargando…</div></div>`;
   try {
@@ -968,9 +1061,11 @@ function filtrosHTML(p) {
 async function pintarPrevia(p) {
   const teamId = vista.lado === "home" ? p.homeId : p.awayId;
   const nombreEq = vista.lado === "home" ? p.local : p.visitante;
-  $("cuerpo").innerHTML = `<section class="xi" id="alineacion"><h4>Alineaciones</h4><div class="campo-espera ${esAngosto() ? "medio" : ""}"></div></section>`
-    + `<section class="avisos" id="avisos"></section>` + filtrosHTML(p) + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
+  $("cuerpo").innerHTML = filtrosHTML(p) + `<section class="picks" id="picks"><div class="vacio">Buscando las mejores picks…</div></section>`
+    + `<section class="xi" id="alineacion"><h4>Alineaciones</h4><div class="campo-espera ${esAngosto() ? "medio" : ""}"></div></section>`
+    + `<section class="avisos" id="avisos"></section>` + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
   pintarAlineacion(p);
+  pintarPicksPartido(p);
   const [forma, actual] = await Promise.all([formaEquipo(teamId, p.fecha, Math.max(vista.n, 10)), resumen(p.id).catch(() => null)]);
   if (activo !== p.id || vista.tab !== "previa" || (vista.lado === "home" ? p.homeId : p.awayId) !== teamId) return;
 
@@ -988,7 +1083,8 @@ async function pintarPrevia(p) {
 
   const { col, asc } = vista.ordenPlantel;
   const val = (f, c) => c === "jugador" ? f.j.nombre : c === "pos" ? (f.j.pos || "") : f[c] ?? -1;
-  filas.sort((a, b) => { const x = val(a, col), y = val(b, col); const s = typeof x === "string" ? x.localeCompare(y) : x - y; return (asc ? s : -s) || b.n - a.n; });
+  filas.sort((a, b) => { const x = val(a, col), y = val(b, col); const s = typeof x === "string" ? x.localeCompare(y) : x - y;
+    return (asc ? s : -s) || (b.pct ?? -1) - (a.pct ?? -1) || (b.prom ?? -1) - (a.prom ?? -1) || b.n - a.n; });
   if (!vista.jugador || !jugadores.has(vista.jugador)) vista.jugador = filas.find(f => f.pj)?.j.id ?? null;
 
   const stat = NOMBRE_STAT[vista.stat].toLowerCase();
@@ -1034,8 +1130,17 @@ function costado(pos = "") {
   if (/^R/.test(pos)) return 1;
   return 0;
 }
-// Devuelve cada titular con d (0 arco propio → 1 mitad de cancha) y t (0 izquierda → 1 derecha del equipo).
+// Puesto exacto de cada número de formación (formationPlace, numeración de Opta que usa ESPN).
+// d: 0 arco propio → 1 mitad de cancha; t: 0 izquierda → 1 derecha del equipo. Fuente: tablas de formaciones de mplsoccer.
+const FORMACIONES_OPTA = {"31213":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"8":[0.394,0.5],"2":[0.576,0.7],"3":[0.576,0.3],"10":[0.758,0.9],"7":[0.758,0.5],"11":[0.758,0.1],"9":[0.94,0.5]},"31312":{"1":[0.03,0.5],"6":[0.181,0.7],"5":[0.181,0.5],"4":[0.181,0.3],"7":[0.334,0.5],"2":[0.485,0.7],"8":[0.485,0.5],"3":[0.485,0.3],"10":[0.94,0.7],"11":[0.94,0.3],"9":[0.789,0.5]},"3142":{"1":[0.03,0.5],"5":[0.212,0.7],"4":[0.212,0.5],"6":[0.212,0.3],"8":[0.394,0.5],"2":[0.576,0.875],"7":[0.576,0.625],"11":[0.576,0.375],"3":[0.576,0.125],"9":[0.94,0.7],"10":[0.94,0.3]},"3241":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"2":[0.394,0.625],"3":[0.394,0.375],"10":[0.758,0.875],"7":[0.758,0.625],"8":[0.758,0.375],"11":[0.758,0.125],"9":[0.94,0.5]},"3331":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"2":[0.394,0.7],"8":[0.394,0.5],"3":[0.394,0.3],"10":[0.576,0.9],"11":[0.576,0.1],"7":[0.758,0.5],"9":[0.94,0.5]},"3412":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"2":[0.394,0.9],"3":[0.394,0.1],"7":[0.576,0.7],"8":[0.576,0.3],"9":[0.758,0.5],"10":[0.94,0.7],"11":[0.94,0.3]},"3421":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"2":[0.394,0.875],"7":[0.394,0.625],"8":[0.394,0.375],"3":[0.394,0.125],"10":[0.758,0.625],"11":[0.758,0.375],"9":[0.94,0.5]},"343":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"2":[0.394,0.9],"3":[0.394,0.1],"7":[0.576,0.7],"8":[0.576,0.3],"10":[0.758,0.9],"11":[0.758,0.1],"9":[0.94,0.5]},"3511":{"1":[0.03,0.5],"5":[0.212,0.7],"6":[0.212,0.5],"4":[0.212,0.3],"2":[0.394,0.9],"11":[0.394,0.5],"3":[0.394,0.1],"7":[0.576,0.7],"8":[0.576,0.3],"10":[0.758,0.5],"9":[0.94,0.5]},"352":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"2":[0.394,0.9],"3":[0.394,0.1],"7":[0.576,0.7],"11":[0.576,0.5],"8":[0.576,0.3],"10":[0.94,0.625],"9":[0.94,0.375]},"41212":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"4":[0.394,0.5],"7":[0.576,0.7],"11":[0.576,0.3],"8":[0.758,0.5],"10":[0.94,0.625],"9":[0.94,0.375]},"4132":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"4":[0.394,0.5],"7":[0.758,0.875],"8":[0.758,0.5],"11":[0.758,0.125],"9":[0.94,0.7],"10":[0.94,0.3]},"4141":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"4":[0.394,0.5],"7":[0.576,0.875],"8":[0.576,0.625],"10":[0.576,0.375],"11":[0.576,0.125],"9":[0.94,0.5]},"4222":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"4":[0.576,0.7],"8":[0.576,0.3],"7":[0.758,0.9],"11":[0.758,0.1],"10":[0.94,0.7],"9":[0.94,0.3]},"4231":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"8":[0.394,0.7],"4":[0.394,0.3],"7":[0.758,0.9],"10":[0.758,0.5],"11":[0.758,0.1],"9":[0.94,0.5]},"424":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"4":[0.394,0.7],"8":[0.394,0.3],"7":[0.758,0.875],"11":[0.758,0.125],"9":[0.94,0.625],"10":[0.94,0.375]},"4312":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"7":[0.576,0.7],"4":[0.576,0.5],"11":[0.576,0.3],"8":[0.758,0.5],"9":[0.94,0.625],"10":[0.94,0.375]},"4321":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"8":[0.576,0.7],"4":[0.576,0.5],"7":[0.576,0.3],"10":[0.758,0.9],"11":[0.758,0.1],"9":[0.94,0.5]},"433":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"4":[0.394,0.5],"7":[0.576,0.7],"8":[0.576,0.3],"10":[0.758,0.9],"11":[0.758,0.1],"9":[0.94,0.5]},"4411":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"7":[0.576,0.875],"4":[0.576,0.625],"8":[0.576,0.375],"11":[0.576,0.125],"10":[0.758,0.5],"9":[0.94,0.5]},"442":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"7":[0.576,0.875],"4":[0.576,0.625],"8":[0.576,0.375],"11":[0.576,0.125],"10":[0.94,0.625],"9":[0.94,0.375]},"451":{"1":[0.03,0.5],"2":[0.212,0.875],"5":[0.212,0.625],"6":[0.212,0.375],"3":[0.212,0.125],"7":[0.576,0.9],"4":[0.576,0.7],"10":[0.576,0.5],"8":[0.576,0.3],"11":[0.576,0.1],"9":[0.94,0.5]},"532":{"1":[0.03,0.5],"2":[0.212,0.9],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"3":[0.212,0.1],"8":[0.394,0.5],"7":[0.576,0.7],"11":[0.576,0.3],"10":[0.94,0.625],"9":[0.94,0.375]},"541":{"1":[0.03,0.5],"6":[0.212,0.7],"5":[0.212,0.5],"4":[0.212,0.3],"2":[0.212,0.9],"3":[0.212,0.1],"7":[0.576,0.875],"8":[0.576,0.625],"10":[0.576,0.375],"11":[0.576,0.125],"9":[0.94,0.5]}};
+// Devuelve cada titular con d y t. Usa el número de puesto; si la formación no es conocida, lo deduce de la posición.
 function ubicarXI(xi, formacion) {
+  const mapa = FORMACIONES_OPTA[(formacion || "").replace(/\D/g, "")];
+  if (mapa && xi.length === 11 && new Set(xi.map(j => j.lugar)).size === 11 && xi.every(j => mapa[j.lugar]))
+    return xi.map(j => ({ ...j, d: mapa[j.lugar][0], t: mapa[j.lugar][1] }));
+  return ubicarPorPosicion(xi, formacion);
+}
+function ubicarPorPosicion(xi, formacion) {
   const arquero = xi.find(j => j.pos === "G") || [...xi].sort((a, b) => a.lugar - b.lugar)[0];
   const campo = xi.filter(j => j !== arquero)
     .sort((a, b) => profundidad(a.pos) - profundidad(b.pos) || a.lugar - b.lugar);
@@ -1120,7 +1225,7 @@ function lineasCancha(W, H, medio) {
     <path d="M${W - 4 - area[0]} ${H / 2 - 7.3 * s} A${r} ${r} 0 0 0 ${W - 4 - area[0]} ${H / 2 + 7.3 * s}"/>`;
 }
 
-function fichaJugador(j, x, y, color, lado, escala, W) {
+function fichaJugador(j, x, y, color, lado, escala, W, arriba = false) {
   const tc = colorTexto(color), sel = j.id === vista.jugador;
   const pct = j.est?.pct != null ? `${Math.round(j.est.pct * 100)}%` : "";
   const r = 19 * escala, f = 15 * escala;
@@ -1131,8 +1236,8 @@ function fichaJugador(j, x, y, color, lado, escala, W) {
     ${sel ? `<circle cx="${x}" cy="${y}" r="${r + 6 * escala}" fill="none" stroke="var(--amarilla)" stroke-width="${4 * escala}"/>` : ""}
     <circle cx="${x}" cy="${y}" r="${r}" fill="#${color}" stroke="#f7f9f4" stroke-width="${2.5 * escala}"/>
     <text x="${x}" y="${y + 5 * escala}" text-anchor="middle" class="dorsal" style="fill:${tc};font-size:${f}px">${esc(j.dorsal ?? "")}</text>
-    <text x="${tx}" y="${y + r + 17 * escala}" text-anchor="${ancla}" class="nombre" style="font-size:${f}px">${esc(j.corto)}</text>
-    ${pct ? `<text x="${tx}" y="${y + r + 36 * escala}" text-anchor="${ancla}" class="pctxi" style="font-size:${f * 1.25}px">${pct}</text>` : ""}
+    <text x="${tx}" y="${arriba ? y - r - (pct ? 28 : 8) * escala : y + r + 17 * escala}" text-anchor="${ancla}" class="nombre" style="font-size:${f}px">${esc(j.corto)}</text>
+    ${pct ? `<text x="${tx}" y="${arriba ? y - r - 7 * escala : y + r + 36 * escala}" text-anchor="${ancla}" class="pctxi" style="font-size:${f * 1.25}px">${pct}</text>` : ""}
     ${j.aviso ? `<g class="marca m-${j.aviso.tipo}"><title>${esc(NOMBRE_AVISO[j.aviso.tipo])}: ${esc(j.aviso.texto)}</title>
       <circle cx="${x + r * 0.78}" cy="${y - r * 0.78}" r="${8 * escala}"/>
       <text x="${x + r * 0.78}" y="${y - r * 0.78 + 4 * escala}" text-anchor="middle" style="font-size:${11 * escala}px">${j.aviso.tipo === "rotar" ? "↻" : "!"}</text></g>` : ""}
@@ -1174,6 +1279,21 @@ function pintarAvisos(p, avh, ava) {
   avisosActuales = { partido: p.id, home: avh, away: ava };
 }
 
+// Dibuja las fichas de un equipo; si el nombre de un jugador se pisa con el de otro, lo pone arriba de su círculo.
+function fichasEquipo(ubicados, posicion, color, lado, escala, W) {
+  const r = 19 * escala, alto = 40 * escala;
+  const cajas = [], puestos = ubicados.map(j => ({ j, xy: posicion(j) })).sort((a, b) => a.j.d - b.j.d || a.j.t - b.j.t);
+  const choca = c => cajas.reduce((a, o) => a + Math.max(0, Math.min(c.x2, o.x2) - Math.max(c.x1, o.x1)) * Math.max(0, Math.min(c.y2, o.y2) - Math.max(c.y1, o.y1)), 0);
+  return puestos.map(({ j, xy: [x, y] }) => {
+    const w = Math.max(String(j.corto || "").length * 8.8 * escala, 44 * escala);
+    const abajo = { x1: x - w / 2, x2: x + w / 2, y1: y + r, y2: y + r + alto };
+    const encima = { x1: x - w / 2, x2: x + w / 2, y1: y - r - alto, y2: y - r };
+    const arriba = choca(encima) < choca(abajo);
+    cajas.push(arriba ? encima : abajo, { x1: x - r, x2: x + r, y1: y - r, y2: y + r });
+    return fichaJugador(j, x, y, color, lado, escala, W, arriba);
+  }).join("");
+}
+
 async function pintarAlineacion(p) {
   const n = Math.max(vista.n, 10);
   try {
@@ -1200,13 +1320,13 @@ async function pintarAlineacion(p) {
     if (esAngosto()) {  // celular: media cancha del equipo elegido
       const x = vista.lado === "home" ? xh : xa, color = vista.lado === "home" ? ch : ca;
       const W = 648, H = 820;
-      const fichas = x ? x.ubicados.map(j => fichaJugador(j, 50 + j.t * (W - 100), H - 92 - j.d * (H - 200), color, vista.lado, 1.4, W)).join("") : "";
+      const fichas = x ? fichasEquipo(x.ubicados, j => [50 + j.t * (W - 100), H - 92 - j.d * (H - 200)], color, vista.lado, 1.4, W) : "";
       svg = `<svg viewBox="0 0 ${W} ${H}" class="campo medio" role="group" aria-label="Alineación"><g class="tiza">${lineasCancha(W, H, true)}</g>${fichas}</svg>`;
       cont.innerHTML = `<h4>Alineación</h4>${svg}<div class="xi-notas">${nota(vista.lado === "home" ? p.local : p.visitante, x)}</div>`;
     } else {
       const W = 1000, H = 648;
-      const fh2 = xh ? xh.ubicados.map(j => fichaJugador(j, 34 + j.d * 430, 52 + j.t * (H - 104), ch, "home", 1, W)).join("") : "";
-      const fa2 = xa ? xa.ubicados.map(j => fichaJugador(j, W - 34 - j.d * 430, H - 52 - j.t * (H - 104), ca, "away", 1, W)).join("") : "";
+      const fh2 = xh ? fichasEquipo(xh.ubicados, j => [34 + j.d * 430, 52 + j.t * (H - 104)], ch, "home", 1, W) : "";
+      const fa2 = xa ? fichasEquipo(xa.ubicados, j => [W - 34 - j.d * 430, H - 52 - j.t * (H - 104)], ca, "away", 1, W) : "";
       svg = `<svg viewBox="0 0 ${W} ${H}" class="campo" role="group" aria-label="Alineaciones"><g class="tiza">${lineasCancha(W, H, false)}</g>${fh2}${fa2}</svg>`;
       cont.innerHTML = `<h4>Alineaciones</h4>${svg}<div class="xi-notas">${nota(p.local, xh)}${nota(p.visitante, xa)}</div>`;
     }
@@ -1267,7 +1387,6 @@ async function pintarJugador(j) {
     if (!sel.length) { cont.innerHTML = `<div><h3>${esc(j.nombre)}</h3></div><div class="vacio">No jugó partidos con estos filtros.</div>`; return; }
     const angosto = window.matchMedia("(max-width: 760px)").matches;
     const { svg, orden } = graficoBarras(sel, angosto ? cont.clientWidth - 24 : cont.clientWidth - 284);
-    ultimoPanel = { j, sel, r };
     const otros = sel.some(p => p.otroEquipo);
     const nota = cargandoOtros ? "Buscando también sus partidos con otros equipos…"
       : otros ? "Incluye sus partidos con otros equipos (club o selección)." : "";
@@ -1280,7 +1399,6 @@ async function pintarJugador(j) {
           <div><div class="v">${r1(r.prom)}</div><div class="k">promedio</div></div>
           <div><div class="v">${Math.max(...sel.map(p => p.stats[vista.stat] ?? 0))}</div><div class="k">máximo</div></div>
         </div>
-        ${cargandoOtros ? "" : `<button class="agregar${enTalon(claveSeleccion(j.id)) ? " ya" : ""}" data-agregar>${enTalon(claveSeleccion(j.id)) ? "Actualizar en el talón" : "Agregar al talón"}</button>`}
       </div>
       <div>
         <p class="nota">${NOMBRE_STAT[vista.stat]} en sus últimos ${sel.length} partidos${vista.soloTitular ? " como titular" : ""}. ${nota}</p>
@@ -1322,280 +1440,6 @@ function activarTooltip(chart, orden) {
     rc.addEventListener("mouseleave", () => { tip.style.display = "none"; rc.setAttribute("fill", "transparent"); });
   });
 }
-
-// ---------- talón: selecciones guardadas con sus estadísticas ----------
-// Se guarda en el navegador (localStorage); si no está disponible, dura mientras la página esté abierta.
-const CLAVE_TALON = "laoficina.talon.v1";
-let talon = [], ultimoPanel = null;
-try { talon = JSON.parse(localStorage.getItem(CLAVE_TALON) || "[]"); } catch { talon = []; }
-const guardarTalon = () => { try { localStorage.setItem(CLAVE_TALON, JSON.stringify(talon)); } catch {} };
-const claveSeleccion = jugadorId => `${activo}|${jugadorId}|${vista.stat}|${vista.linea}`;
-const enTalon = clave => talon.some(s => s.clave === clave);
-const cuotaJusta = prob => prob > 0 ? (1 / prob).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "–";
-
-function agregarAlTalon() {
-  const p = partidos.find(x => x.id === activo);
-  if (!p || !ultimoPanel) return;
-  const { j, sel, r } = ultimoPanel;
-  const clave = claveSeleccion(j.id);
-  const seleccion = {
-    clave, jugador: j.nombre, pos: j.pos && j.pos !== "SUB" ? j.pos : "",
-    equipo: vista.lado === "home" ? p.local : p.visitante,
-    partido: { id: p.id, local: p.local, visitante: p.visitante, fecha: p.fecha, liga: p.liga_nombre },
-    stat: vista.stat, linea: vista.linea, soloTitular: vista.soloTitular,
-    pct: r.pct, sup: r.sup, n: r.n, prom: r.prom, max: Math.max(...sel.map(x => x.stats[vista.stat] ?? 0)),
-    valores: [...sel].reverse().map(x => ({ v: x.stats[vista.stat], fecha: x.fecha, rival: x.rival })),
-    agregado: new Date().toISOString(),
-  };
-  const i = talon.findIndex(s => s.clave === clave);
-  if (i >= 0) talon[i] = seleccion; else talon.push(seleccion);
-  guardarTalon();
-  pintarTalon();
-  const b = $("abrirTalon"); b.classList.remove("pulso"); void b.offsetWidth; b.classList.add("pulso");
-  const btn = document.querySelector("[data-agregar]");
-  if (btn) { btn.textContent = "En el talón"; btn.classList.add("ya"); }
-}
-
-function barrasTalon(valores, linea) {
-  const W = 360, H = 88, base = 50, alto = 42;
-  const max = Math.max(linea + 0.5, ...valores.map(x => x.v ?? 0));
-  const band = W / Math.max(valores.length, 1), bw = Math.min(18, band * 0.6);
-  let g = "";
-  valores.forEach((x, i) => {
-    const v = x.v ?? 0, h = Math.max((v / max) * alto, 2), bx = i * band + (band - bw) / 2;
-    g += `<rect x="${bx}" y="${base - h}" width="${bw}" height="${h}" rx="2" fill="var(${v > linea ? "--hit" : "--miss"})">
-            <title>${esc(fmtLarga.format(new Date(x.fecha)))}, contra ${esc(x.rival)}: ${x.v ?? "sin dato"}</title></rect>
-          <text class="val" x="${i * band + band / 2}" y="${base + 15}" text-anchor="middle">${x.v ?? "–"}</text>`;
-  });
-  const ly = base - (linea / max) * alto;
-  g += `<line x1="0" x2="${W}" y1="${ly}" y2="${ly}" stroke="var(--text)" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <text x="0" y="${H - 2}">← más antiguo</text><text x="${W}" y="${H - 2}" text-anchor="end">más reciente →</text>`;
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Últimos valores: ${valores.map(x => x.v ?? "sin dato").join(", ")}">${g}</svg>`;
-}
-
-function textoTalon() {
-  const prob = talon.reduce((a, s) => a * (s.pct ?? 0), 1);
-  return ["La Oficina, talón", ""].concat(talon.map((s, i) =>
-    `${i + 1}. ${s.jugador} (${s.equipo}) más de ${r1(s.linea)} ${NOMBRE_STAT[s.stat].toLowerCase()}\n` +
-    `   ${s.partido.local} vs ${s.partido.visitante}, ${fmtDia.format(new Date(s.partido.fecha))}\n` +
-    `   Superó la línea en ${s.sup} de ${s.n} (${Math.round(s.pct * 100)}%), promedio ${r1(s.prom)}, cuota justa ${cuotaJusta(s.pct)}\n` +
-    `   Últimos: ${s.valores.map(x => x.v ?? "–").join(" ")}`))
-    .concat(talon.length > 1 ? ["", `Combinada: ${Math.round(prob * 100)}% histórico, cuota justa ${cuotaJusta(prob)}`] : [])
-    .join("\n");
-}
-
-function pintarTalon() {
-  $("talonN").textContent = talon.length;
-  const cont = $("talon");
-  if (cont.hidden) return;
-  if (!talon.length) {
-    cont.innerHTML = `<header><h2>Talón</h2><button class="cerrar" data-cerrar>Cerrar</button></header>
-      <div class="vacio">Tu talón está vacío. Abrí un partido, tocá un jugador y usá “Agregar al talón”: se guarda con la estadística y la línea que estés mirando.</div>`;
-    return;
-  }
-  const prob = talon.reduce((a, s) => a * (s.pct ?? 0), 1);
-  const hoy = isoLocal(new Date());
-  cont.innerHTML = `<header><h2>Talón</h2><span class="sup">${talon.length} ${talon.length === 1 ? "selección" : "selecciones"}</span>
-      <button class="cerrar" data-cerrar>Cerrar</button></header>
-    ${talon.map((s, i) => {
-      const f = new Date(s.partido.fecha);
-      const cuando = isoLocal(f) === hoy ? `hoy a las ${fmtHora.format(f)}` : `${fmtDia.format(f)} a las ${fmtHora.format(f)}`;
-      return `<div class="seleccion">
-        <div class="quien">${esc(s.jugador)}</div>
-        <div class="donde">${esc(s.equipo)}${s.pos ? `, ${esc(s.pos)}` : ""}. ${esc(s.partido.local)} vs ${esc(s.partido.visitante)}, ${esc(cuando)}</div>
-        <button class="quitar" data-quitar="${i}">Quitar</button>
-        <div class="linea">Más de ${r1(s.linea)} ${NOMBRE_STAT[s.stat].toLowerCase()}${s.soloTitular ? " (partidos como titular)" : ""}</div>
-        <div class="datos">
-          <div><div class="v">${Math.round(s.pct * 100)}%</div><div class="k">superó en ${s.sup} de ${s.n}</div></div>
-          <div><div class="v chica">${r1(s.prom)}</div><div class="k">promedio</div></div>
-          <div><div class="v chica">${s.max}</div><div class="k">máximo</div></div>
-          <div><div class="v chica">${cuotaJusta(s.pct)}</div><div class="k">cuota justa</div></div>
-        </div>
-        ${barrasTalon(s.valores, s.linea)}
-      </div>`;
-    }).join("")}
-    <div class="pie">
-      ${talon.length > 1 ? `<div class="total">
-        <div><div class="v">${Math.round(prob * 100)}%</div><div class="k">histórico de la combinada</div></div>
-        <div><div class="v">${cuotaJusta(prob)}</div><div class="k">cuota justa de la combinada</div></div>
-      </div>
-      <p>Si bet365 paga más que la cuota justa, la apuesta tiene valor según el historial. El % de la combinada multiplica los de cada selección, como si fueran independientes; con jugadores del mismo partido puede no ser así.</p>`
-      : `<p>Si bet365 paga más que la cuota justa, la apuesta tiene valor según el historial de estos partidos.</p>`}
-      <div class="acciones">
-        <a class="principal" href="https://wa.me/?text=${encodeURIComponent(textoTalon())}" target="_blank" rel="noopener">Mandar por WhatsApp</a>
-        <button data-copiar>Copiar talón</button>
-        <button data-vaciar>Vaciar talón</button>
-      </div>
-    </div>`;
-}
-
-function abrirTalon(abrir) {
-  $("talon").hidden = !abrir;
-  $("abrirTalon").setAttribute("aria-expanded", String(abrir));
-  if (abrir) { pintarTalon(); if (typeof abrirChat === "function" && !$("chat").hidden) abrirChat(false); }
-}
-
-$("abrirTalon").addEventListener("click", () => abrirTalon($("talon").hidden));
-$("talon").addEventListener("click", async e => {
-  if (e.target.closest("[data-cerrar]")) { abrirTalon(false); return; }
-  const q = e.target.closest("[data-quitar]");
-  if (q) { talon.splice(+q.dataset.quitar, 1); guardarTalon(); pintarTalon(); refrescarBotonAgregar(); return; }
-  if (e.target.closest("[data-vaciar]")) {
-    if (confirm("¿Vaciar el talón? Se borran todas las selecciones.")) { talon = []; guardarTalon(); pintarTalon(); refrescarBotonAgregar(); }
-    return;
-  }
-  const c = e.target.closest("[data-copiar]");
-  if (c) {
-    try { await navigator.clipboard.writeText(textoTalon()); c.textContent = "Copiado"; }
-    catch { prompt("Copiá el talón:", textoTalon()); }
-  }
-});
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("talon").hidden) abrirTalon(false); });
-function refrescarBotonAgregar() {
-  const btn = document.querySelector("[data-agregar]");
-  if (!btn || !ultimoPanel) return;
-  const ya = enTalon(claveSeleccion(ultimoPanel.j.id));
-  btn.classList.toggle("ya", ya);
-  btn.textContent = ya ? "Actualizar en el talón" : "Agregar al talón";
-}
-pintarTalon();
-
-// ---------- chat IA (pasa por un worker de Cloudflare que guarda la clave de Anthropic) ----------
-const CHAT_URL = "";  // URL del worker, por ejemplo https://la-oficina-chat.TU-SUBDOMINIO.workers.dev
-const CLAVE_CHAT = "laoficina.chat";
-let chat = [], chatOcupado = false;
-try { chat = JSON.parse(sessionStorage.getItem(CLAVE_CHAT) || "[]"); } catch { chat = []; }
-const guardarChat = () => { try { sessionStorage.setItem(CLAVE_CHAT, JSON.stringify(chat.slice(-20))); } catch {} };
-
-// texto mínimo con formato: **negrita**, listas con "-" o "1." y párrafos
-function mdLite(t) {
-  const lineas = esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").split("\n");
-  let html = "", lista = null;
-  const cerrar = () => { if (lista) { html += `</${lista}>`; lista = null; } };
-  for (const l of lineas) {
-    const ul = l.match(/^\s*[-•*]\s+(.*)/), ol = l.match(/^\s*\d+[.)]\s+(.*)/);
-    if (ul || ol) {
-      const tipo = ul ? "ul" : "ol";
-      if (lista !== tipo) { cerrar(); html += `<${tipo}>`; lista = tipo; }
-      html += `<li>${(ul || ol)[1]}</li>`;
-    } else { cerrar(); if (l.trim()) html += `<p>${l}</p>`; }
-  }
-  cerrar();
-  return html;
-}
-
-// resumen por jugador de varias estadísticas, para que la IA arme combinadas con datos reales
-const LINEAS_IA = { tiros: [0.5, 1.5, 2.5], tiros_al_arco: [0.5, 1.5], faltas_cometidas: [0.5, 1.5], faltas_recibidas: [0.5, 1.5],
-                    amarillas: [0.5], goles: [0.5], asistencias: [0.5], atajadas: [1.5, 2.5] };
-function lineaJugadorIA(j, avisos, n) {
-  const ps = [...j.partidos].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, n);
-  if (!ps.length) return null;
-  const tit = ps.filter(x => x.titular).length;
-  const conMin = ps.filter(x => x.minutos != null);
-  const min = conMin.length ? Math.round(conMin.reduce((a, x) => a + x.minutos, 0) / conMin.length) : "?";
-  const partes = [];
-  for (const [st, lineas] of Object.entries(LINEAS_IA)) {
-    const vals = ps.map(x => x.stats[st]).filter(v => v != null);
-    if (!vals.length) continue;
-    const prom = vals.reduce((a, b) => a + b, 0) / vals.length;
-    if (st === "atajadas" && j.pos !== "G") continue;
-    if (prom === 0 && st !== "tiros") continue;  // ceros que no aportan: se omiten para achicar el contexto
-    const pcts = lineas.map(l => `+${l}: ${Math.round(vals.filter(v => v > l).length / vals.length * 100)}%`).join(" ");
-    partes.push(`${NOMBRE_STAT[st].toLowerCase()} prom ${r1(prom)} (${pcts}) últimos [${ps.map(x => x.stats[st] ?? "-").join(",")}]`);
-  }
-  const av = (avisos.get(j.id) || []).map(a => `${NOMBRE_AVISO[a.tipo].toUpperCase()}: ${a.texto}`).join("; ");
-  return `- ${j.nombre} (${j.pos && j.pos !== "SUB" ? j.pos : "?"}) | ${ps.length} PJ, ${tit} de titular, ${min}' por partido${av ? ` | AVISO ${av}` : ""}\n    ${partes.join(" · ")}`;
-}
-
-async function contextoIA() {
-  const partes = [`Hoy es ${fmtLarga.format(new Date())}. Estadística elegida en la página: ${NOMBRE_STAT[vista.stat]}, línea más de ${r1(vista.linea)}, últimos ${vista.n} partidos.`];
-  const p = partidos.find(x => x.id === activo);
-  if (p) {
-    const f = new Date(p.fecha), n = Math.max(vista.n, 10);
-    partes.push(`\nPARTIDO ABIERTO: ${p.local} (local) vs ${p.visitante}, ${p.liga_nombre}, ${fmtDia.format(f)} ${fmtHora.format(f)}. Estado: ${p.estado === "pre" ? "por jugarse" : p.detalle}${p.estado !== "pre" ? `, ${p.gl}-${p.gv}` : ""}.`);
-    try {
-      const [fh, fa, actual] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n), resumen(p.id).catch(() => null)]);
-      for (const [teamId, forma, nombre] of [[p.homeId, fh, p.local], [p.awayId, fa, p.visitante]]) {
-        const conv = actual?.convocados?.[teamId] || [];
-        const xi = conv.filter(c => c.titular);
-        const avisos = avisosEquipo(teamId, forma, actual, p.fecha, p.liga_nombre);
-        partes.push(`\n== ${nombre} == (últimos ${forma.partidos.length} partidos: ${forma.partidos.slice(0, 5).map(m => `${m.local} ${m.gl}-${m.gv} ${m.visitante}`).join("; ")})`);
-        partes.push(xi.length >= 11 ? `Alineación CONFIRMADA: ${xi.map(c => c.nombre).join(", ")}. Suplentes: ${conv.filter(c => !c.titular).map(c => c.nombre).join(", ")}`
-          : "Alineación todavía no confirmada (la página muestra el último 11 como probable).");
-        const filas = [...forma.jugadores.values()].filter(j => j.partidos.length >= 2)
-          .sort((a, b) => b.partidos.length - a.partidos.length).slice(0, 22)
-          .map(j => lineaJugadorIA(j, avisos, vista.n)).filter(Boolean);
-        partes.push(filas.join("\n"));
-      }
-    } catch { partes.push("(No se pudieron traer los datos de ESPN de este partido.)"); }
-  } else {
-    partes.push("\nNo hay ningún partido abierto en la página. Si el usuario pregunta por jugadores, sugerile abrir el partido para tener datos.");
-  }
-  const otros = partidos.filter(x => x.id !== activo && x.estado === "pre").slice(0, 30);
-  if (otros.length) partes.push(`\nOtros partidos cargados por jugarse: ${otros.map(x => `${x.local} vs ${x.visitante} (${x.liga_nombre})`).join("; ")}.`);
-  partes.push(talon.length ? `\nTALÓN ACTUAL DEL USUARIO:\n${textoTalon()}` : "\nEl talón del usuario está vacío.");
-  return partes.join("\n");
-}
-
-function pintarChat() {
-  const cont = $("chatMensajes");
-  const p = partidos.find(x => x.id === activo);
-  $("chatContexto").textContent = p ? `Usa los datos de ${p.local} vs ${p.visitante} y tu talón.` : "Abrí un partido para que la IA use sus datos.";
-  if (!CHAT_URL) {
-    cont.innerHTML = `<div class="intro">El chat todavía no está conectado: falta poner la dirección del servidor que guarda la clave de la IA.</div>`;
-    $("chatForm").querySelector("button").disabled = true;
-    return;
-  }
-  const sug = p ? [`Armame una combinada de 3 para ${p.local} vs ${p.visitante}`, "¿Quién tiene más chances de recibir faltas?", "¿Hay algún titular en duda?"]
-                : ["¿Cómo armo una buena combinada?", "¿Qué es la cuota justa?"];
-  if (talon.length) sug.push("¿Qué riesgos tiene mi talón?");
-  cont.innerHTML = (chat.length ? "" : `<div class="intro">Preguntá lo que quieras sobre el partido abierto o tu talón. La IA ve los mismos números que la página (historial de los últimos partidos, avisos de bajas y rotación), no las cuotas de las casas.
-      <div class="sugerencias">${sug.map(t => `<button type="button" data-sug="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`)
-    + chat.map(m => `<div class="msg ${m.role}">${m.role === "assistant" ? mdLite(m.content) : esc(m.content)}</div>`).join("")
-    + (chatOcupado ? `<div class="msg assistant pensando">Pensando…</div>` : "");
-  cont.scrollTop = cont.scrollHeight;
-  $("chatForm").querySelector("button").disabled = chatOcupado;
-}
-
-async function enviarChat(texto) {
-  texto = texto.trim();
-  if (!texto || chatOcupado || !CHAT_URL) return;
-  chat.push({ role: "user", content: texto.slice(0, 2000) });
-  chatOcupado = true; guardarChat(); pintarChat();
-  let error = null;
-  try {
-    const contexto = await contextoIA();
-    const r = await fetch(CHAT_URL, { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: chat.slice(-12), contexto }) });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok || !d.texto) error = d.error || `El servidor respondió ${r.status}.`;
-    else chat.push({ role: "assistant", content: d.texto });
-  } catch { error = "No se pudo conectar con el chat. Revisá tu conexión."; }
-  if (error) chat.pop();  // la pregunta vuelve al cuadro de texto para reintentar
-  chatOcupado = false; guardarChat(); pintarChat();
-  if (error) {
-    $("chatTexto").value = texto;
-    $("chatMensajes").insertAdjacentHTML("beforeend", `<div class="msg error">${esc(error)}</div>`);
-  }
-}
-
-function abrirChat(abrir) {
-  $("chat").hidden = !abrir;
-  $("abrirChat").setAttribute("aria-expanded", String(abrir));
-  if (abrir) { abrirTalon(false); pintarChat(); $("chatTexto").focus(); }
-}
-$("abrirChat").addEventListener("click", () => abrirChat($("chat").hidden));
-$("chat").addEventListener("click", e => {
-  if (e.target.closest("[data-cerrar-chat]")) { abrirChat(false); return; }
-  if (e.target.closest("[data-limpiar]")) { if (!chatOcupado) { chat = []; guardarChat(); pintarChat(); } return; }
-  const s = e.target.closest("[data-sug]");
-  if (s) enviarChat(s.dataset.sug);
-});
-$("chatForm").addEventListener("submit", e => { e.preventDefault(); const t = $("chatTexto").value; $("chatTexto").value = ""; enviarChat(t); });
-$("chatTexto").addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("chatForm").requestSubmit(); }
-});
-document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("chat").hidden) abrirChat(false); });
 
 // ---------- música de fondo ----------
 // Los navegadores no permiten sonar sin una acción del usuario: arranca con el botón,
@@ -1640,9 +1484,10 @@ $("destacados").addEventListener("click", e => {
 });
 $("detalle").addEventListener("click", e => {
   if (e.target.closest("[data-volver]")) { volverALista(); return; }
+  const pk = e.target.closest(".pick");
+  if (pk) { irAPick(pk); return; }
   const ficha = e.target.closest(".ficha");
   if (ficha) { elegirDesdeCancha(ficha); return; }
-  if (e.target.closest("[data-agregar]")) { agregarAlTalon(); return; }
   const tab = e.target.closest("[data-tab]");
   if (tab) { vista.tab = tab.dataset.tab; pintarDetalle(); return; }
   const lado = e.target.closest("[data-lado]");
@@ -1670,6 +1515,8 @@ $("detalle").addEventListener("change", e => {
   else if (id === "fLinea") vista.linea = +e.target.value;
   else if (id === "fN") vista.n = +e.target.value;
   else if (id === "fTit") vista.soloTitular = e.target.checked;
+  else if (id === "iStat") { vista.stat = e.target.value; pintarInicio(); return; }
+  else if (id === "iLinea") { vista.linea = +e.target.value; pintarInicio(); return; }
   else return;
   pintarDetalle();
 });
@@ -1682,6 +1529,16 @@ window.addEventListener("resize", () => {
 });
 $("buscar").addEventListener("input", () => { pintarLista(); if (esAngosto() && document.body.classList.contains("ver-detalle")) volverALista(); });
 $("filtroLiga").addEventListener("change", pintarLista);
+$("picksMovil").addEventListener("click", e => { const pk = e.target.closest(".pick"); if (pk) irAPick(pk); });
+$("picksMovil").addEventListener("change", e => {
+  if (e.target.id === "iStat") vista.stat = e.target.value; else if (e.target.id === "iLinea") vista.linea = +e.target.value; else return;
+  pintarInicio();
+});
+$("irInicio").addEventListener("click", () => {
+  activo = null; document.body.classList.remove("ver-detalle");
+  pintarLista(); pintarDestacados(); pintarDetalle();
+  if (esAngosto()) window.scrollTo({ top: 0 });
+});
 $("cargar").addEventListener("click", cargarPartidos);
 
 // ---------- inicio ----------
