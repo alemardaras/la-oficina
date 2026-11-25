@@ -302,11 +302,53 @@
   .campo .tiza * { fill: none; stroke: #f7f9f4; stroke-width: 2.5; opacity: .75; }
   .campo .ficha { cursor: pointer; }
   .campo .ficha:focus-visible { outline: none; }
-  .campo .ficha:focus-visible circle:not([fill="none"]) { stroke: var(--amarilla); }
+  .campo .aro { fill: none; stroke: transparent; }
+  .campo .ficha.sel .aro { fill: rgba(242, 194, 48, .2); stroke: var(--amarilla); }
+  .campo .ficha:focus-visible .aro { stroke: var(--amarilla); stroke-dasharray: 5 4; }
+  .campo .camiseta { filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .45)); }
+  .campo .pct-xi rect { fill: rgba(8, 24, 12, .78); }
+  .campo .pct-xi text { fill: #f7f9f4; font-weight: 800; stroke: none; }
+  .campo .pct-xi.alta rect { fill: var(--acento); }
   .campo text { font-family: var(--ui); paint-order: stroke; stroke: rgba(6, 26, 10, .55); stroke-width: 3px; stroke-linejoin: round; }
   .campo text.dorsal { font-weight: 800; stroke: none; }
   .campo text.nombre { fill: #f7f9f4; font-weight: 700; }
   .campo text.pctxi { fill: #f7f9f4; font-weight: 800; }
+  .plantel-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .plantel-cab h4 { margin: 0; }
+  .plantel-lista { display: flex; flex-direction: column; gap: 2px; }
+  /* primera columna fija: si cada fila midiera la suya, las barras no arrancarían alineadas y no se podrían comparar */
+  .jug { display: grid; grid-template-columns: 240px minmax(80px, 1fr) 58px auto; align-items: center; gap: 14px;
+         padding: 9px 12px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; background: none;
+         text-align: left; width: 100%; }
+  .jug:hover { background: var(--panel-2); }
+  .jug.sel { background: var(--panel-2); border-color: var(--acento); }
+  .jug:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+  .jug-quien { min-width: 0; display: flex; align-items: baseline; gap: 7px; }
+  /* el nombre nunca se come del todo: lo que cede primero es el texto de posición y partidos */
+  .jug-quien b { flex: 1 1 auto; min-width: 52px; font-size: 14px; font-weight: 700;
+                 overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .jug-quien small { flex: 0 1 auto; min-width: 0; font-size: 11px; color: var(--text-2);
+                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jug-quien .hoy, .jug-quien .aviso { flex: none; }
+  .jug-barra { position: relative; height: 20px; border-radius: 5px; background: var(--panel-2);
+               box-shadow: inset 0 0 0 1px var(--border); display: flex; align-items: center; }
+  .jug.sel .jug-barra, .jug:hover .jug-barra { background: var(--bg); }
+  .jug-barra i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; min-width: 3px;
+                 background: color-mix(in srgb, var(--acento) 45%, var(--panel-2)); }
+  .jug-barra em { position: relative; margin-left: 7px; font-style: normal; font-size: 12px; font-weight: 800;
+                  font-variant-numeric: tabular-nums; }
+  .jug-pct { text-align: right; font: 800 16px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .jug-pct small { display: block; font: 400 10px/1.4 var(--ui); color: var(--text-2); }
+  .jug-pct.alta { color: var(--acento); }
+  .jug-spark { display: flex; align-items: center; }
+  .plantel-tabla { margin-top: 14px; }
+  .plantel-tabla summary { cursor: pointer; color: var(--text-2); font-size: 13px; }
+  @media (max-width: 760px) {
+    .jug { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; padding: 10px; }
+    .jug-barra { grid-column: 1; }
+    .jug-pct { grid-row: 1; grid-column: 2; }
+    .jug-spark { grid-row: 2; grid-column: 2; }
+  }
   .xi-notas { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--text-2); margin-top: 8px; }
   .xi-notas b { color: var(--text); }
   .xi-nota { display: block; }
@@ -756,8 +798,10 @@ function parsearResumen(id, d) {
     formaciones[tid] = eq.formation || null;
     for (const p of eq.roster || []) {
       const aid = p.athlete.id;
+      const jerseys = p.athlete.jerseyImages || [];
       convocados[tid].push({ id: aid, nombre: p.athlete.displayName, corto: p.athlete.shortName || p.athlete.displayName,
-        pos: p.position?.abbreviation, titular: !!p.starter, dorsal: p.jersey, lugar: +p.formationPlace || 99 });
+        pos: p.position?.abbreviation, titular: !!p.starter, dorsal: p.jersey, lugar: +p.formationPlace || 99,
+        camiseta: (jerseys.find(x => (x.rel || []).includes("dark")) || jerseys[0])?.href || null });
       const st = Object.fromEntries((p.stats || []).map(s => [s.name, s.value]));
       if (!(p.starter || p.subbedIn || st.appearances > 0)) continue;
       const ini = p.starter ? 0 : entra[aid];
@@ -1396,10 +1440,11 @@ async function pintarPrevia(p) {
   const teamId = vista.lado === "home" ? p.homeId : p.awayId;
   const nombreEq = vista.lado === "home" ? p.local : p.visitante;
   $("cuerpo").innerHTML = filtrosHTML(p)
-    + `<section class="comparativa" id="comparativa"><div class="vacio">Comparando a ${esc(nombreEq)} con sus últimos partidos…</div></section>`
-    + `<section class="picks" id="picks"><div class="vacio">Buscando las mejores picks…</div></section>`
     + `<section class="xi" id="alineacion"><h4>Alineaciones</h4><div class="campo-espera ${esAngosto() ? "medio" : ""}"></div></section>`
-    + `<section class="avisos" id="avisos"></section>` + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
+    + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`
+    + `<section class="picks" id="picks"><div class="vacio">Buscando las mejores picks…</div></section>`
+    + `<section class="comparativa" id="comparativa"><div class="vacio">Comparando a ${esc(nombreEq)} con sus últimos partidos…</div></section>`
+    + `<section class="avisos" id="avisos"></section>`;
   pintarAlineacion(p);
   pintarPicksPartido(p);
   const [forma, actual] = await Promise.all([formaEquipo(teamId, p.fecha, Math.max(vista.n, 10)), resumen(p.id).catch(() => null)]);
@@ -1429,20 +1474,44 @@ async function pintarPrevia(p) {
     ["prom", `Promedio de ${stat}`], ["pct", `Superó ${r1(vista.linea)}`], ["spark", "Últimos partidos", "izq"]];
   plantelActual = jugadores;
   const enTabla = esAngosto();  // en celular el gráfico va debajo del jugador elegido
-  const tabla = `<div class="tablewrap"><table data-tabla="plantel"><thead><tr>${cols.map(([c, t, cl]) =>
+  const maxProm = Math.max(...filas.map(f => f.prom ?? 0), 0.1);
+  const etiquetasDe = f => {
+    const av = (avisos.get(f.j.id) || []).filter(a => a.tipo !== "hoy").slice(0, 1);
+    // "Convocado" + "Suplente hoy" dicen lo mismo: con un aviso presente alcanza, salvo que sea titular
+    const hoy = f.hoy && (f.hoy.titular || !av.length) ? `<span class="hoy">${f.hoy.titular ? "Titular hoy" : "Convocado"}</span>` : "";
+    return hoy + av.map(etiquetaAviso).join("");
+  };
+
+  // lectura rápida: la barra es el promedio, la píldora es cuántas veces superó la línea
+  const lista = `<div class="plantel-lista">${filas.map(f => `
+    <div class="jug${f.j.id === vista.jugador ? " sel" : ""}" data-j="${esc(f.j.id)}" tabindex="0" role="button"
+         aria-label="${esc(f.j.nombre)}${f.pct != null ? `, superó la línea en ${f.sup} de ${f.n}` : ""}">
+      <span class="jug-quien"><b>${esc(f.j.nombre)}</b><small>${esc(f.j.pos && f.j.pos !== "SUB" ? f.j.pos : "")}${
+        f.pj ? `${f.j.pos && f.j.pos !== "SUB" ? " · " : ""}${f.pj} PJ` : ""}</small>${etiquetasDe(f)}</span>
+      <span class="jug-barra"><i style="width:${Math.round(((f.prom ?? 0) / maxProm) * 100)}%"></i>
+        <em>${f.prom != null ? r1(f.prom) : "–"}</em></span>
+      <span class="jug-pct${f.pct >= 0.7 ? " alta" : ""}">${f.pct != null ? `${Math.round(f.pct * 100)}%` : "–"}
+        <small>${f.pct != null ? `${f.sup}/${f.n}` : ""}</small></span>
+      <span class="jug-spark">${f.ps.length ? sparkline(f.ps) : ""}</span>
+    </div>${enTabla && f.j.id === vista.jugador ? PANEL_MOVIL : ""}`).join("")}</div>`;
+
+  const tabla = `<details class="plantel-tabla"><summary>Ver la tabla con todos los números</summary>
+    <div class="tablewrap"><table data-tabla="plantel"><thead><tr>${cols.map(([c, t, cl]) =>
       `<th data-col="${c}" class="${cl || ""} ${c === col ? "ord" + (asc ? " asc" : "") : ""}">${t}</th>`).join("")}</tr></thead><tbody>
     ${filas.map(f => `<tr class="fila${f.j.id === vista.jugador ? " sel" : ""}" data-j="${esc(f.j.id)}" tabindex="0">
-      <td class="izq">${esc(f.j.nombre)}${f.hoy ? `<span class="hoy">${f.hoy.titular ? "Titular hoy" : "Convocado"}</span>` : ""}${(avisos.get(f.j.id) || []).filter(a => a.tipo !== "hoy").slice(0, 1).map(etiquetaAviso).join("")}</td>
+      <td class="izq">${esc(f.j.nombre)}${etiquetasDe(f)}</td>
       <td class="izq sup col-opc">${esc(f.j.pos === "SUB" ? "" : f.j.pos)}</td>
       <td>${f.pj}</td><td class="col-opc">${f.min != null ? Math.round(f.min) : "–"}</td>
       <td>${f.prom != null ? r1(f.prom) : "–"}</td>
       <td class="pct">${f.pct != null ? `${Math.round(f.pct * 100)}%<small>${f.sup} de ${f.n}</small>` : "–"}</td>
-      <td class="izq">${f.ps.length ? sparkline(f.ps) : ""}</td></tr>${enTabla && f.j.id === vista.jugador ? PANEL_FILA : ""}`).join("")}
-    </tbody></table></div>
-    <p class="nota" style="margin-top:10px">La tabla usa los últimos ${forma.partidos.length} partidos de ${esc(nombreEq)} en todas sus competiciones; los minutos son aproximados.
-    ${conv.length ? "" : `La alineación confirmada aparece cuando ESPN la publica, cerca del inicio${p.estado === "pre" && new Date(p.fecha) - Date.now() < 6 * 36e5 ? "; la página la busca sola cada 2 minutos" : ""}.`}</p>`;
+      <td class="izq">${f.ps.length ? sparkline(f.ps) : ""}</td></tr>`).join("")}
+    </tbody></table></div></details>`;
 
-  $("previa").innerHTML = (enTabla ? "" : `<section class="jugador" id="panelJugador"></section>`) + tabla;
+  $("previa").innerHTML = `<div class="plantel-cab"><h4>${esc(nombreEq)}: ${esc(stat)} por partido</h4>
+      <span class="sup">Barra: promedio. Píldora: cuántas veces superó ${r1(vista.linea)}. Tocá un jugador para ver su gráfico.</span></div>`
+    + (enTabla ? "" : `<section class="jugador" id="panelJugador"></section>`) + lista + tabla
+    + `<p class="nota" style="margin-top:10px">Son los últimos ${forma.partidos.length} partidos de ${esc(nombreEq)} en todas sus competiciones; los minutos son aproximados.
+    ${conv.length ? "" : `La alineación confirmada aparece cuando ESPN la publica, cerca del inicio${p.estado === "pre" && new Date(p.fecha) - Date.now() < 6 * 36e5 ? "; la página la busca sola cada 2 minutos" : ""}.`}</p>`;
   pintarJugador(jugadores.get(vista.jugador));
 }
 
@@ -1562,22 +1631,38 @@ function lineasCancha(W, H, medio) {
     <path d="M${W - 4 - area[0]} ${H / 2 - 7.3 * s} A${r} ${r} 0 0 0 ${W - 4 - area[0]} ${H / 2 + 7.3 * s}"/>`;
 }
 
+// ESPN arma la camiseta del equipo con el dorsal; el combiner la devuelve liviana (6 KB en vez de 240 KB).
+const urlCamiseta = (href, w = 120) => href ? `https://a.espncdn.com/combiner/i?img=${encodeURIComponent(href)}&w=${w}` : "";
+
 function fichaJugador(j, x, y, color, lado, escala, W, arriba = false) {
   const tc = colorTexto(color), sel = j.id === vista.jugador;
-  const pct = j.est?.pct != null ? `${Math.round(j.est.pct * 100)}%` : "";
-  const r = 19 * escala, f = 15 * escala;
+  const pct = j.est?.pct != null ? Math.round(j.est.pct * 100) : null;
+  const r = 23 * escala, f = 15 * escala;
   // nombres cerca del borde: alineados hacia adentro para que no se corten
   const borde = 70 * escala;
   const [tx, ancla] = x < borde ? [Math.max(8, x - r), "start"] : x > W - borde ? [Math.min(W - 8, x + r), "end"] : [x, "middle"];
-  return `<g class="ficha" data-xi="${esc(j.id)}" data-xi-lado="${lado}" tabindex="0" role="button" aria-label="${esc(j.nombre)}${pct ? `, ${pct}` : ""}">
-    ${sel ? `<circle cx="${x}" cy="${y}" r="${r + 6 * escala}" fill="none" stroke="var(--amarilla)" stroke-width="${4 * escala}"/>` : ""}
-    <circle cx="${x}" cy="${y}" r="${r}" fill="#${color}" stroke="#f7f9f4" stroke-width="${2.5 * escala}"/>
-    <text x="${x}" y="${y + 5 * escala}" text-anchor="middle" class="dorsal" style="fill:${tc};font-size:${f}px">${esc(j.dorsal ?? "")}</text>
-    <text x="${tx}" y="${arriba ? y - r - (pct ? 28 : 8) * escala : y + r + 17 * escala}" text-anchor="${ancla}" class="nombre" style="font-size:${f}px">${esc(j.corto)}</text>
-    ${pct ? `<text x="${tx}" y="${arriba ? y - r - 7 * escala : y + r + 36 * escala}" text-anchor="${ancla}" class="pctxi" style="font-size:${f * 1.25}px">${pct}</text>` : ""}
+  const yNombre = arriba ? y - r - (pct != null ? 24 : 6) * escala : y + r + 16 * escala;
+  const yPct = arriba ? y - r - 5 * escala : y + r + 33 * escala;
+  const cuerpo = j.camiseta
+    ? `<image class="camiseta" href="${esc(urlCamiseta(j.camiseta))}" x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" preserveAspectRatio="xMidYMid meet"/>`
+    : `<circle cx="${x}" cy="${y}" r="${r * 0.85}" fill="#${color}" stroke="#f7f9f4" stroke-width="${2.5 * escala}"/>
+       <text x="${x}" y="${y + 5 * escala}" text-anchor="middle" class="dorsal" style="fill:${tc};font-size:${f}px">${esc(j.dorsal ?? "")}</text>`;
+  let pildora = "";
+  if (pct != null) {
+    const txt = `${pct}%`, w = (txt.length * 7.6 + 12) * escala, h = 18 * escala;
+    const px = ancla === "middle" ? tx - w / 2 : ancla === "start" ? tx : tx - w;
+    pildora = `<g class="pct-xi${pct >= 70 ? " alta" : ""}">
+      <rect x="${px}" y="${yPct - h + 4.5 * escala}" width="${w}" height="${h}" rx="${h / 2}"/>
+      <text x="${px + w / 2}" y="${yPct}" text-anchor="middle" style="font-size:${12.5 * escala}px">${txt}</text></g>`;
+  }
+  return `<g class="ficha${sel ? " sel" : ""}" data-xi="${esc(j.id)}" data-xi-lado="${lado}" tabindex="0" role="button" aria-label="${esc(j.nombre)}${pct != null ? `, ${pct}%` : ""}">
+    <circle class="aro" cx="${x}" cy="${y}" r="${r + 3 * escala}" stroke-width="${3 * escala}"/>
+    ${cuerpo}
+    <text x="${tx}" y="${yNombre}" text-anchor="${ancla}" class="nombre" style="font-size:${f}px">${esc(j.corto)}</text>
+    ${pildora}
     ${j.aviso ? `<g class="marca m-${j.aviso.tipo}"><title>${esc(NOMBRE_AVISO[j.aviso.tipo])}: ${esc(j.aviso.texto)}</title>
-      <circle cx="${x + r * 0.78}" cy="${y - r * 0.78}" r="${8 * escala}"/>
-      <text x="${x + r * 0.78}" y="${y - r * 0.78 + 4 * escala}" text-anchor="middle" style="font-size:${11 * escala}px">${j.aviso.tipo === "rotar" ? "↻" : "!"}</text></g>` : ""}
+      <circle cx="${x + r * 0.72}" cy="${y - r * 0.72}" r="${8 * escala}"/>
+      <text x="${x + r * 0.72}" y="${y - r * 0.72 + 4 * escala}" text-anchor="middle" style="font-size:${11 * escala}px">${j.aviso.tipo === "rotar" ? "↻" : "!"}</text></g>` : ""}
   </g>`;
 }
 
@@ -1618,7 +1703,7 @@ function pintarAvisos(p, avh, ava) {
 
 // Dibuja las fichas de un equipo; si el nombre de un jugador se pisa con el de otro, lo pone arriba de su círculo.
 function fichasEquipo(ubicados, posicion, color, lado, escala, W) {
-  const r = 19 * escala, alto = 40 * escala;
+  const r = 23 * escala, alto = 40 * escala;
   const cajas = [], puestos = ubicados.map(j => ({ j, xy: posicion(j) })).sort((a, b) => a.j.d - b.j.d || a.j.t - b.j.t);
   const choca = c => cajas.reduce((a, o) => a + Math.max(0, Math.min(c.x2, o.x2) - Math.max(c.x1, o.x1)) * Math.max(0, Math.min(c.y2, o.y2) - Math.max(c.y1, o.y1)), 0);
   return puestos.map(({ j, xy: [x, y] }) => {
@@ -1677,14 +1762,15 @@ async function pintarAlineacion(p) {
 function elegirDesdeCancha(g) {
   const id = g.dataset.xi, lado = g.dataset.xiLado;
   if (lado !== vista.lado) { vista.lado = lado; vista.jugador = id; pintarDetalle(); return; }
-  const fila = document.querySelector(`tr.fila[data-j="${CSS.escape(id)}"]`);
+  const fila = document.querySelector(`.jug[data-j="${CSS.escape(id)}"], tr.fila[data-j="${CSS.escape(id)}"]`);
   if (fila) elegirFila(fila); else { vista.jugador = id; pintarDetalle(); }
   document.querySelectorAll("#alineacion .ficha").forEach(f => f.classList.toggle("elegida", f.dataset.xi === id));
   const p = partidos.find(x => x.id === activo); if (p) pintarAlineacion(p);
 }
 
 let plantelActual = null;
-const PANEL_FILA = `<tr class="panel-fila"><td colspan="7"><section class="jugador" id="panelJugador"></section></td></tr>`;
+const PANEL_FILA = `<tr class="panel-fila panel-movil"><td colspan="7"><section class="jugador" id="panelJugador"></section></td></tr>`;
+const PANEL_MOVIL = `<section class="jugador panel-movil" id="panelJugador"></section>`;
 const esAngosto = () => window.matchMedia("(max-width: 860px)").matches;
 
 // Ejecuta un cambio en la página sin que se mueva lo que el usuario está mirando:
@@ -1700,16 +1786,17 @@ function sinSalto(ancla, cambio) {
   else window.scrollBy(0, delta);
 }
 
-function elegirFila(fila) {
-  const id = fila.dataset.j;
+// sirve igual para una fila de la tabla y para una tarjeta de la lista gráfica
+function elegirFila(el) {
+  const id = el.dataset.j;
   if (id === vista.jugador || !plantelActual) return;
   vista.jugador = id;
-  sinSalto(fila, () => {
-    document.querySelectorAll("tr.fila.sel").forEach(r => r.classList.remove("sel"));
-    fila.classList.add("sel");
+  sinSalto(el, () => {
+    document.querySelectorAll("[data-j].sel").forEach(r => r.classList.remove("sel"));
+    document.querySelectorAll(`[data-j="${CSS.escape(id)}"]`).forEach(r => r.classList.add("sel"));
     if (esAngosto()) {
-      document.querySelector("tr.panel-fila")?.remove();
-      fila.insertAdjacentHTML("afterend", PANEL_FILA);
+      document.querySelector(".panel-movil")?.remove();
+      el.insertAdjacentHTML("afterend", el.tagName === "TR" ? PANEL_FILA : PANEL_MOVIL);
     }
     pintarJugador(plantelActual.get(id));
   });
@@ -1855,13 +1942,13 @@ $("detalle").addEventListener("click", e => {
     vista[o] = { col: c, asc: vista[o].col === c ? !vista[o].asc : ["jugador", "pos", "posicion"].includes(c) };
     pintarDetalle(); return;
   }
-  const fila = e.target.closest("tr.fila");
+  const fila = e.target.closest("tr.fila, .jug");
   if (fila) elegirFila(fila);
 });
 $("detalle").addEventListener("keydown", e => {
   const ficha = e.target.closest?.(".ficha");
   if (ficha && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); elegirDesdeCancha(ficha); return; }
-  const fila = e.target.closest?.("tr.fila");
+  const fila = e.target.closest?.("tr.fila, .jug");
   if (fila && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); elegirFila(fila); }
 });
 $("detalle").addEventListener("change", e => {
