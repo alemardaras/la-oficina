@@ -153,6 +153,33 @@
                  color: var(--text-2); margin-bottom: -1px; font-weight: 600; }
   .tabs button.on { color: var(--text); border-bottom-color: var(--acento); }
 
+  .hechos { display: flex; flex-direction: column; }
+  .hecho { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+           padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .hecho:last-child { border-bottom: 0; }
+  .hecho-izq { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .hecho-ico { flex: none; display: block; }
+  .hecho-txt { min-width: 0; line-height: 1.35; }
+  .hecho-txt b { display: block; font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hecho.gol .hecho-txt b .marcador { color: var(--acento); }
+  .hecho-txt small { display: block; font-size: 12px; color: var(--text-2); }
+  .hecho-min { flex: none; font-weight: 800; font-size: 13px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .hecho-tarjeta { width: 12px; height: 16px; border-radius: 2px; flex: none; }
+  .hecho-tarjeta.amarilla { background: var(--amarilla); }
+  .hecho-tarjeta.roja { background: var(--live); }
+  .hecho.cambio .hecho-cambio { display: flex; flex-direction: column; gap: 5px; }
+  .hecho.cambio .fila { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .hecho.cambio .fila.entra { color: var(--acento); }
+  .hecho.cambio .fila.sale { color: var(--live); }
+  .hecho.visita { flex-direction: row-reverse; }
+  .hecho.visita .hecho-izq { flex-direction: row-reverse; }
+  .hecho.visita .hecho-txt, .hecho.visita .hecho-cambio { align-items: flex-end; text-align: right; }
+  .hecho.visita .fila { flex-direction: row-reverse; }
+  .hecho-mt { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 0;
+              font-size: 13px; color: var(--text-2); font-weight: 600; }
+  .hecho-mt .circulo { width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--panel);
+                       display: flex; align-items: center; justify-content: center; font: 800 11px var(--ui); flex: none; }
+
   .filtros { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; margin-bottom: 20px; }
   .filtros label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--text-2); }
   .filtros select { padding: 7px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2); color: var(--text); font-weight: 500; }
@@ -182,6 +209,12 @@
   .chart text.linea { fill: var(--text); font-weight: 700; }
   details summary { cursor: pointer; color: var(--text-2); font-size: 13px; margin-top: 8px; }
   @media (max-width: 760px) { .jugador { grid-template-columns: 1fr; } }
+
+  .comparativa { margin-bottom: 24px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel-2); }
+  .comparativa h4 { margin: 0 0 12px; }
+  .comparativa .filtros { margin-bottom: 14px; }
+  .comparativa-frase { font-size: 15px; margin: 0 0 12px; }
+  .comparativa-frase b { color: var(--acento); }
 
   .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--border);
          box-shadow: 0 8px 24px rgba(0,0,0,.14); border-radius: 10px; padding: 8px 10px; font-size: 13px; white-space: nowrap; display: none; z-index: 5; }
@@ -424,6 +457,7 @@ const r1 = x => (Math.round(x * 10) / 10).toLocaleString("es-AR");
 let partidos = [], activo = null;
 const resumenes = {}, equipos = {}, atletas = {};
 const vista = { tab: null, lado: "home", stat: "tiros", linea: 0.5, n: 10, soloTitular: false, jugador: null,
+                favorContra: "favor", sedeEq: "todos", rivalEq: "",
                 ordenPlantel: { col: "prom", asc: false }, ordenPartido: { col: "tiros", asc: false } };
 
 // ---------- red ----------
@@ -609,7 +643,7 @@ function pintarDestacados() {
 }
 
 function abrirPartido(id) {
-  if (activo !== id) { vista.jugador = null; vista.lado = "home"; vista.tab = null; }
+  if (activo !== id) { vista.jugador = null; vista.lado = "home"; vista.tab = null; vista.rivalEq = ""; vista.sedeEq = "todos"; }
   activo = id;
   if (!$("lista").querySelector(`.partido[data-id="${CSS.escape(id)}"]`)) { $("buscar").value = ""; $("filtroLiga").value = ""; }
   document.body.classList.add("ver-detalle");
@@ -645,6 +679,27 @@ function parsearResumen(id, d) {
     homeId: home.team?.id, awayId: away.team?.id, local: home.team?.displayName, visitante: away.team?.displayName,
     gl: home.score, gv: away.score, terminado: !!comp.status?.type?.completed,
   };
+  const eventos = [];
+  { let gl = 0, gv = 0;
+    for (const k of d.keyEvents || []) {
+      const tipo = k.type?.type || "", m = k.clock?.displayValue || "", ps = k.participants || [];
+      if (k.scoringPlay) {
+        if (k.team?.id === meta.homeId) gl++; else if (k.team?.id === meta.awayId) gv++;
+        eventos.push({ tipo: tipo === "own-goal" ? "autogol" : "gol", minuto: m, equipoId: k.team?.id,
+          jugador: ps[0]?.athlete?.displayName || "", asistencia: tipo === "own-goal" ? null : (ps[1]?.athlete?.displayName || null),
+          marcador: `${gl}-${gv}` });
+      } else if (tipo === "yellow-card" || tipo === "red-card") {
+        eventos.push({ tipo: tipo === "yellow-card" ? "amarilla" : "roja", minuto: m, equipoId: k.team?.id,
+          jugador: ps[0]?.athlete?.displayName || "", doble: /second yellow/i.test(k.text || "") });
+      } else if (tipo === "substitution" && ps.length === 2) {
+        eventos.push({ tipo: "cambio", minuto: m, equipoId: k.team?.id,
+          jugador: ps[0]?.athlete?.displayName || "", saliente: ps[1]?.athlete?.displayName || "" });
+      } else if (tipo === "halftime") {
+        const add = k.clock?.value > 2700 ? Math.round((k.clock.value - 2700) / 60) : 0;
+        eventos.push({ tipo: "entretiempo", marcador: `${gl}-${gv}`, añadidos: add });
+      }
+    }
+  }
   const filas = [], convocados = {}, formaciones = {}, colores = {};
   for (const c of cs) if (c.team?.id) colores[c.team.id] = [c.team.color, c.team.alternateColor];
   for (const eq of d.rosters || []) {
@@ -667,7 +722,7 @@ function parsearResumen(id, d) {
       filas.push(f);
     }
   }
-  return { meta, filas, convocados, formaciones, colores };
+  return { meta, filas, convocados, formaciones, colores, eventos };
 }
 
 function resumen(id, forzar = false) {
@@ -701,7 +756,13 @@ function formaEquipo(teamId, antesDe, n) {
     for (const r of rs) {
       if (!r) continue;
       const m = r.meta, esLocal = m.homeId === teamId;
-      partidosEq.push(m);
+      const favor = {}, contra = {};
+      for (const c of Object.values(STATS)) {
+        favor[c] = r.filas.filter(f => f.teamId === teamId).reduce((s, f) => s + (f[c] || 0), 0);
+        contra[c] = r.filas.filter(f => f.teamId !== teamId).reduce((s, f) => s + (f[c] || 0), 0);
+      }
+      partidosEq.push({ ...m, esLocal, favor, contra,
+        rival: esLocal ? m.visitante : m.local, rivalId: esLocal ? m.awayId : m.homeId });
       const conv = r.convocados?.[teamId] || [];
       planteles.push({ id: m.id, fecha: m.fecha, comp: m.comp, conocido: conv.length >= 11, conv: new Set(conv.map(c => c.id)) });
       for (const f of r.filas.filter(f => f.teamId === teamId)) {
@@ -1015,6 +1076,7 @@ function cabecera(p) {
       </div>
     </div>
     <div class="tabs" role="tablist">
+      ${jugado ? `<button role="tab" data-tab="hechos" class="${vista.tab === "hechos" ? "on" : ""}">Hechos</button>` : ""}
       <button role="tab" data-tab="previa" class="${vista.tab === "previa" ? "on" : ""}">Forma reciente</button>
       ${jugado ? `<button role="tab" data-tab="partido" class="${vista.tab === "partido" ? "on" : ""}">Este partido</button>` : ""}
     </div>`;
@@ -1023,14 +1085,63 @@ function cabecera(p) {
 async function pintarDetalle() {
   const p = partidos.find(x => x.id === activo), det = $("detalle");
   if (!p) { pintarInicio(); return; }
-  if (!vista.tab || (vista.tab === "partido" && p.estado === "pre")) vista.tab = "previa";
+  if (!vista.tab) vista.tab = p.estado === "pre" ? "previa" : "hechos";
+  if (p.estado === "pre" && vista.tab !== "previa") vista.tab = "previa";
   det.innerHTML = cabecera(p) + `<div id="cuerpo"><div class="vacio">Cargando…</div></div>`;
   try {
     if (vista.tab === "partido") await pintarStatsPartido(p);
+    else if (vista.tab === "hechos") await pintarHechos(p);
     else await pintarPrevia(p);
   } catch (e) {
     if (activo === p.id) $("cuerpo").innerHTML = `<div class="vacio">ESPN no respondió. Revisá tu conexión y volvé a elegir el partido.</div>`;
   }
+}
+
+const ICONO_ENTRA = `<svg class="hecho-ico" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+  <path d="M13 8H5M9 4L5 8l4 4" fill="none" stroke="var(--acento)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICONO_SALE = `<svg class="hecho-ico" width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+  <path d="M3 8h8M7 4l4 4-4 4" fill="none" stroke="var(--live)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function iconoGol(autogol) {
+  return `<svg class="hecho-ico" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+    <circle cx="8" cy="8" r="7" fill="${autogol ? "var(--live)" : "var(--acento)"}"/>
+    <path d="M8 4.3l2.3 1.7-.9 2.6H6.6l-.9-2.6L8 4.3z" fill="var(--panel)"/></svg>`;
+}
+
+function filaHecho(p, e) {
+  if (e.tipo === "entretiempo") {
+    return `<div class="hecho-mt"><span class="circulo">MT</span><span>${esc(e.marcador)}</span>${
+      e.añadidos ? `<span>+${e.añadidos}' añadidos</span>` : ""}</div>`;
+  }
+  const lado = e.equipoId === p.awayId ? " visita" : "";
+  if (e.tipo === "cambio") {
+    return `<div class="hecho cambio${lado}"><div class="hecho-cambio">
+        <span class="fila entra">${ICONO_ENTRA}${esc(e.jugador)}</span>
+        <span class="fila sale">${ICONO_SALE}${esc(e.saliente)}</span>
+      </div><span class="hecho-min">${esc(e.minuto)}</span></div>`;
+  }
+  let icono, titulo, sub;
+  if (e.tipo === "gol" || e.tipo === "autogol") {
+    icono = iconoGol(e.tipo === "autogol");
+    titulo = `${esc(e.jugador)} <span class="marcador">(${esc(e.marcador)})</span>`;
+    sub = e.tipo === "autogol" ? "Gol en contra" : (e.asistencia ? `Asistencia de ${e.asistencia}` : "");
+  } else {
+    icono = `<span class="hecho-tarjeta ${e.tipo === "amarilla" ? "amarilla" : "roja"}"></span>`;
+    titulo = esc(e.jugador);
+    sub = e.tipo === "roja" ? (e.doble ? "Doble amarilla" : "Expulsión") : "Falta";
+  }
+  return `<div class="hecho${e.tipo === "gol" || e.tipo === "autogol" ? " gol" : ""}${lado}">
+      <div class="hecho-izq">${icono}<div class="hecho-txt"><b>${titulo}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div></div>
+      <span class="hecho-min">${esc(e.minuto)}</span></div>`;
+}
+
+async function pintarHechos(p) {
+  const r = await resumen(p.id, p.estado === "in");
+  if (activo !== p.id || vista.tab !== "hechos") return;
+  const ev = r.eventos || [];
+  if (!ev.length) { $("cuerpo").innerHTML = `<div class="vacio">ESPN todavía no publicó hechos de este partido.</div>`; return; }
+  $("cuerpo").innerHTML = `<div class="hechos">${ev.slice().reverse().map(e => filaHecho(p, e)).join("")}</div>`
+    + (p.estado === "in" ? `<p class="nota" style="margin-top:12px">El partido sigue en juego; volvé a abrir esta pestaña para actualizar.</p>` : "");
 }
 
 async function pintarStatsPartido(p) {
@@ -1067,10 +1178,48 @@ function filtrosHTML(p) {
   </div>`;
 }
 
+function filtrosComparativaHTML(forma) {
+  const opt = (arr, val) => arr.map(([v, t]) => `<option value="${v}"${String(v) === String(val) ? " selected" : ""}>${t}</option>`).join("");
+  const rivales = [...new Map(forma.partidos.map(m => [m.rivalId, m.rival])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  return `<div class="filtros">
+    <label>A favor o en contra <select id="fFavorContra">${opt([["favor", "A favor"], ["contra", "En contra"]], vista.favorContra)}</select></label>
+    <label>Rival <select id="fRival"><option value=""${vista.rivalEq ? "" : " selected"}>Todos</option>${opt(rivales, vista.rivalEq)}</select></label>
+    <label>Como local o visitante <select id="fSede">${opt([["todos", "Todos"], ["local", "Local"], ["visita", "Visitante"]], vista.sedeEq)}</select></label>
+  </div>`;
+}
+
+function pintarComparativa(forma, nombreEq) {
+  const cont = $("comparativa");
+  if (!cont) return;
+  const cabecera = `<h4>Comparativa de equipo</h4>${filtrosComparativaHTML(forma)}`;
+  if (!forma.partidos.length) { cont.innerHTML = `${cabecera}<div class="vacio">ESPN no tiene partidos anteriores de ${esc(nombreEq)}.</div>`; return; }
+  let filas = forma.partidos.map(m => ({
+    eventId: m.id, fecha: m.fecha, comp: m.comp, rival: m.rival, rivalId: m.rivalId,
+    condicion: m.esLocal ? "L" : "V", resultado: `${m.gl}-${m.gv}`, minutos: 90, titular: true,
+    stats: vista.favorContra === "contra" ? m.contra : m.favor,
+  }));
+  if (vista.rivalEq) filas = filas.filter(f => String(f.rivalId) === String(vista.rivalEq));
+  if (vista.sedeEq !== "todos") filas = filas.filter(f => f.condicion === (vista.sedeEq === "local" ? "L" : "V"));
+  const sel = filtrarPartidos(filas), r = resumenStat(sel);
+  if (!sel.length) { cont.innerHTML = `${cabecera}<div class="vacio">No hay partidos con estos filtros.</div>`; return; }
+  const { svg, orden } = graficoBarras(sel, (cont.clientWidth || 700) - 24);
+  const stat = NOMBRE_STAT[vista.stat].toLowerCase();
+  const sentido = vista.favorContra === "favor" ? "a favor" : "en contra";
+  const comoTxt = vista.sedeEq === "local" ? " de local" : vista.sedeEq === "visita" ? " de visitante" : "";
+  const rivalTxt = vista.rivalEq ? ` contra ${esc(filas[0]?.rival || "")}` : "";
+  cont.innerHTML = `${cabecera}
+    <p class="comparativa-frase">El <b>${esc(nombreEq)}</b>${comoTxt} promedia <b>${r1(r.prom)}</b> ${esc(stat)} (${sentido})${rivalTxt}, en sus últimos ${sel.length} partidos.</p>
+    <div class="leyenda"><span><i style="background:var(--hit)"></i>Superó la línea</span><span><i style="background:var(--miss)"></i>No la superó</span><span><i class="dash"></i>Línea ${r1(vista.linea)}</span></div>
+    <div class="chart" id="chartEq">${svg}</div>`;
+  activarTooltip($("chartEq"), orden);
+}
+
 async function pintarPrevia(p) {
   const teamId = vista.lado === "home" ? p.homeId : p.awayId;
   const nombreEq = vista.lado === "home" ? p.local : p.visitante;
-  $("cuerpo").innerHTML = filtrosHTML(p) + `<section class="picks" id="picks"><div class="vacio">Buscando las mejores picks…</div></section>`
+  $("cuerpo").innerHTML = filtrosHTML(p)
+    + `<section class="comparativa" id="comparativa"><div class="vacio">Comparando a ${esc(nombreEq)} con sus últimos partidos…</div></section>`
+    + `<section class="picks" id="picks"><div class="vacio">Buscando las mejores picks…</div></section>`
     + `<section class="xi" id="alineacion"><h4>Alineaciones</h4><div class="campo-espera ${esAngosto() ? "medio" : ""}"></div></section>`
     + `<section class="avisos" id="avisos"></section>` + `<div id="previa"><div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></div>`;
   pintarAlineacion(p);
@@ -1078,6 +1227,7 @@ async function pintarPrevia(p) {
   const [forma, actual] = await Promise.all([formaEquipo(teamId, p.fecha, Math.max(vista.n, 10)), resumen(p.id).catch(() => null)]);
   if (activo !== p.id || vista.tab !== "previa" || (vista.lado === "home" ? p.homeId : p.awayId) !== teamId) return;
 
+  pintarComparativa(forma, nombreEq);
   const conv = actual?.convocados?.[teamId] || [];
   const avisos = avisosEquipo(teamId, forma, actual, p.fecha, p.liga_nombre);
   const convMap = new Map(conv.map(c => [c.id, c]));
@@ -1500,7 +1650,7 @@ $("detalle").addEventListener("click", e => {
   const tab = e.target.closest("[data-tab]");
   if (tab) { vista.tab = tab.dataset.tab; pintarDetalle(); return; }
   const lado = e.target.closest("[data-lado]");
-  if (lado) { vista.lado = lado.dataset.lado; vista.jugador = null; pintarDetalle(); return; }
+  if (lado) { vista.lado = lado.dataset.lado; vista.jugador = null; vista.rivalEq = ""; pintarDetalle(); return; }
   const th = e.target.closest("th[data-col]");
   if (th) {
     const t = th.closest("table").dataset.tabla, c = th.dataset.col;
@@ -1524,6 +1674,9 @@ $("detalle").addEventListener("change", e => {
   else if (id === "fLinea") vista.linea = +e.target.value;
   else if (id === "fN") vista.n = +e.target.value;
   else if (id === "fTit") vista.soloTitular = e.target.checked;
+  else if (id === "fFavorContra") vista.favorContra = e.target.value;
+  else if (id === "fRival") vista.rivalEq = e.target.value;
+  else if (id === "fSede") vista.sedeEq = e.target.value;
   else if (id === "iStat") { vista.stat = e.target.value; pintarInicio(); return; }
   else if (id === "iLinea") { vista.linea = +e.target.value; pintarInicio(); return; }
   else return;
