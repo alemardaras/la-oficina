@@ -216,6 +216,50 @@
   .comparativa-frase { font-size: 15px; margin: 0 0 12px; }
   .comparativa-frase b { color: var(--acento); }
 
+  /* ---------- mi talón ---------- */
+  .btn-top { background: rgba(255,255,255,.1); color: #fff; border: 0; border-radius: 999px;
+             padding: 8px 14px; font-weight: 600; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 7px; }
+  .btn-top:hover { background: rgba(255,255,255,.16); }
+  .btn-top .cuenta { background: var(--acento); border-radius: 999px; padding: 1px 7px; font-size: 12px; font-weight: 800; }
+  .btn-top .cuenta:empty, .btn-top .cuenta[hidden] { display: none; }
+  .acciones-top { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .acciones-top .musica { margin-left: 0; }
+  .guardar-pick { margin-top: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+                  padding: 8px 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+  .guardar-pick:hover { border-color: var(--acento); }
+  .guardar-pick.on { background: var(--acento); border-color: var(--acento); color: #fff; }
+  .talon-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .talon-cab h2 { margin: 0; font: 800 26px/1.1 var(--display); letter-spacing: -.02em; }
+  .talon-lista { display: flex; flex-direction: column; gap: 10px; }
+  .talon-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+                padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel-2); }
+  .talon-item .quien { flex: 1 1 190px; min-width: 0; }
+  .talon-item .tasa, .talon-item .talon-cuota { flex: none; }
+  .talon-item .talon-quitar { flex: none; margin-left: auto; }
+  .talon-item .quien b { display: block; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .talon-item .mercado { font-size: 13px; font-weight: 700; color: var(--acento); }
+  .talon-item .donde { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .talon-item .tasa { text-align: center; font-size: 11px; color: var(--text-2); line-height: 1.3; }
+  .talon-item .tasa b { display: block; font: 800 19px/1 var(--display); color: var(--text); }
+  .talon-cuota { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-2); }
+  .talon-cuota input, .talon-monto input { padding: 7px 9px; border: 1px solid var(--border); border-radius: 9px;
+                                           background: var(--panel); color: var(--text); font: 700 14px var(--ui); }
+  .talon-cuota input { width: 84px; }
+  .talon-quitar { background: none; border: 0; color: var(--text-2); cursor: pointer; font-size: 20px; line-height: 1; padding: 2px 4px; }
+  .talon-quitar:hover { color: var(--live); }
+  .talon-totales { margin-top: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel-2); }
+  .talon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 14px; }
+  .talon-grid .v { font: 800 26px/1 var(--display); letter-spacing: -.02em; }
+  .talon-grid .v.ok { color: var(--acento); }
+  .talon-grid .k { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+  .talon-monto { display: flex; align-items: center; gap: 9px; margin-top: 16px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; }
+  .talon-monto input { width: 120px; }
+  .talon-acciones { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .talon-acciones button { padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border);
+                           background: var(--panel); color: var(--text); font-weight: 600; cursor: pointer; }
+  .talon-acciones button:hover { border-color: var(--acento); }
+  .talon-acciones button.primario { background: var(--acento); border-color: var(--acento); color: #fff; }
+
   .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--border);
          box-shadow: 0 8px 24px rgba(0,0,0,.14); border-radius: 10px; padding: 8px 10px; font-size: 13px; white-space: nowrap; display: none; z-index: 5; }
   .tip b { font: 800 18px var(--display); }
@@ -392,7 +436,10 @@
   <div class="in">
     <button class="logo" id="irInicio" title="Picks del día"><span class="ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="1.5" y="8" width="3" height="6.5" rx="1" fill="#fff"/><rect x="6.5" y="4" width="3" height="10.5" rx="1" fill="#fff"/><rect x="11.5" y="1.5" width="3" height="13" rx="1" fill="#fff"/></svg></span>La Oficina <span class="tag">STATS</span></button>
     <label class="buscador"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="#fff" stroke-width="1.8"/><path d="M11 11l3.5 3.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg><input id="buscar" type="search" placeholder="Buscar equipo o liga" aria-label="Buscar equipo o liga"></label>
-    <button id="musicaBtn" class="musica" aria-pressed="false">Poner música</button>
+    <div class="acciones-top">
+      <button id="irTalon" class="btn-top" title="Mi talón"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h10v13l-2-1.3-1.7 1.3L8 13.2 6.3 14.5 4.6 13.2 3 14.5z" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/><path d="M5.8 5.5h4.4M5.8 8.3h4.4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg><span class="txt">Mi talón</span><span class="cuenta" id="cuentaTalon" hidden></span></button>
+      <button id="musicaBtn" class="musica" aria-pressed="false">Poner música</button>
+    </div>
     <audio id="musica" src="cancion.mp3" loop preload="none"></audio>
   </div>
 </header>
@@ -643,6 +690,7 @@ function pintarDestacados() {
 }
 
 function abrirPartido(id) {
+  verTalon = false;
   if (activo !== id) { vista.jugador = null; vista.lado = "home"; vista.tab = null; vista.rivalEq = ""; vista.sedeEq = "todos"; }
   activo = id;
   if (!$("lista").querySelector(`.partido[data-id="${CSS.escape(id)}"]`)) { $("buscar").value = ""; $("filtroLiga").value = ""; }
@@ -844,6 +892,135 @@ const etiquetaAviso = a => `<span class="aviso a-${a.tipo}" title="${esc(a.texto
 // ---------- picks: los 3 jugadores más firmes de cada equipo según el filtro elegido ----------
 const cuotaJusta = prob => prob > 0 ? (1 / prob).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "–";
 const textoMercado = () => `Más de ${r1(vista.linea)} ${NOMBRE_STAT[vista.stat].toLowerCase()}`;
+
+// ---------- mi talón: picks guardados en este navegador ----------
+const CLAVE_PICKS = "laoficina.picks", CLAVE_MONTO = "laoficina.monto";
+let misPicks = [], montoTalon = 1000, verTalon = false, pickVisible = null;
+try { misPicks = JSON.parse(localStorage.getItem(CLAVE_PICKS)) || []; } catch {}
+try { montoTalon = +localStorage.getItem(CLAVE_MONTO) || 1000; } catch {}
+const guardarEnDisco = () => { try {
+  localStorage.setItem(CLAVE_PICKS, JSON.stringify(misPicks));
+  localStorage.setItem(CLAVE_MONTO, String(montoTalon));
+} catch {} };
+const mercadoPick = k => `Más de ${r1(k.linea)} ${NOMBRE_STAT[k.stat].toLowerCase()}`;
+const aCuota = v => { const n = parseFloat(String(v ?? "").replace(",", ".")); return Number.isFinite(n) && n > 1 ? n : null; };
+const fmt2 = x => x.toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function actualizarCuentaTalon() {
+  const el = $("cuentaTalon");
+  el.textContent = misPicks.length || "";
+  el.hidden = !misPicks.length;
+}
+
+// Arma el pick con lo que el usuario está mirando: jugador, estadística y línea elegidas.
+function pickDesdeVista(j, r) {
+  const p = partidos.find(x => x.id === activo);
+  if (!p || !j) return null;
+  const esLocal = vista.lado === "home";
+  return {
+    id: `${p.id}|${j.id}|${vista.stat}|${vista.linea}`,
+    partidoId: p.id, jugadorId: j.id, jugador: j.nombre,
+    equipo: esLocal ? p.local : p.visitante, rival: esLocal ? p.visitante : p.local,
+    liga: p.liga_nombre, fecha: p.fecha, stat: vista.stat, linea: vista.linea,
+    pct: r.pct, sup: r.sup, n: r.n, prom: r.prom, cuota: null,
+  };
+}
+
+function alternarPickVisible() {
+  if (!pickVisible) return;
+  const i = misPicks.findIndex(x => x.id === pickVisible.id);
+  if (i >= 0) misPicks.splice(i, 1); else misPicks.push({ ...pickVisible });
+  guardarEnDisco(); actualizarCuentaTalon();
+  const b = document.querySelector("[data-guardar-pick]");
+  if (b) { const on = i < 0; b.classList.toggle("on", on); b.textContent = on ? "✓ En mi talón" : "☆ Guardar en mi talón"; }
+}
+
+// Probabilidad suavizada (Laplace): con 10 de 10 la tasa cruda da 100%, que como probabilidad
+// es mentira y haría que cualquier cuota parezca tener valor. (sup+1)/(n+2) corrige eso.
+const probAjustada = k => k.n > 0 ? (k.sup + 1) / (k.n + 2) : null;
+
+// La cuota combinada multiplica las cuotas; la "justa" sale de multiplicar las probabilidades ajustadas.
+function totalesTalon() {
+  const cuotas = misPicks.map(k => aCuota(k.cuota)), conCuota = cuotas.filter(c => c != null);
+  const probs = misPicks.map(probAjustada).filter(v => v != null && v > 0);
+  const probModelo = misPicks.length && probs.length === misPicks.length ? probs.reduce((a, b) => a * b, 1) : null;
+  const combinada = conCuota.length ? conCuota.reduce((a, b) => a * b, 1) : null;
+  return { combinada, faltan: cuotas.length - conCuota.length, probModelo,
+           justa: probModelo ? 1 / probModelo : null, retorno: combinada != null ? combinada * montoTalon : null };
+}
+
+function totalesTalonHTML() {
+  const t = totalesTalon();
+  const completo = t.combinada != null && t.justa != null && !t.faltan;
+  const valor = completo && t.combinada > t.justa;
+  return `<div class="talon-grid">
+      <div><div class="v${valor ? " ok" : ""}">${t.combinada != null ? fmt2(t.combinada) : "–"}</div>
+        <div class="k">cuota combinada${t.faltan ? ` (faltan ${t.faltan})` : ""}</div></div>
+      <div><div class="v">${t.justa != null ? fmt2(t.justa) : "–"}</div><div class="k">cuota justa según tus datos</div></div>
+      <div><div class="v">${t.probModelo != null ? Math.round(t.probModelo * 100) + "%" : "–"}</div><div class="k">probabilidad combinada ajustada</div></div>
+      <div><div class="v">${t.retorno != null ? "$" + fmt2(t.retorno) : "–"}</div>
+        <div class="k">cobrás${t.retorno != null ? `, ganancia $${fmt2(t.retorno - montoTalon)}` : ""}</div></div>
+    </div>
+    <p class="nota" style="margin:14px 0 0">${
+      t.combinada == null ? "Cargá la cuota de cada pick para ver cuánto paga la combinada."
+      : !completo ? "Faltan cuotas: la combinada es parcial."
+      : valor ? "La combinada paga más que la cuota justa de tus datos: según tu historial, tiene valor."
+      : "La combinada paga menos que la cuota justa de tus datos."}
+      La probabilidad no es la tasa cruda: está ajustada para no tratar un 10 de 10 como un 100% seguro. Igual son muestras chicas, tomalo como referencia y no como certeza.</p>`;
+}
+
+function textoTalon() {
+  const lineas = misPicks.map(k => {
+    const c = aCuota(k.cuota);
+    return `• ${k.jugador} — ${mercadoPick(k)} (${k.equipo} vs ${k.rival})`
+      + (c ? ` @ ${fmt2(c)}` : "") + (k.pct != null ? ` · ${Math.round(k.pct * 100)}% en ${k.n}` : "");
+  });
+  const t = totalesTalon();
+  if (t.combinada != null) lineas.push(`Combinada ${fmt2(t.combinada)}${t.faltan ? ` (faltan ${t.faltan})` : ""}: $${fmt2(montoTalon)} → $${fmt2(t.retorno)}`);
+  return "Mi talón · La Oficina\n" + lineas.join("\n");
+}
+
+async function copiarTalon(boton) {
+  const txt = textoTalon();
+  try { await navigator.clipboard.writeText(txt); boton.textContent = "¡Copiado!"; }
+  catch { boton.textContent = "No se pudo copiar"; }
+  setTimeout(() => { boton.textContent = "Copiar talón"; }, 1800);
+}
+
+function pintarTalon() {
+  const cont = $("detalle");
+  const cab = `<button class="volver" data-volver>← Partidos</button>
+    <div class="talon-cab"><div><h2>Mi talón</h2>
+      <p class="sup">Los picks quedan guardados en este navegador. Cargá la cuota de cada uno para ver cuánto paga la combinada.</p></div></div>`;
+  if (!misPicks.length) {
+    cont.innerHTML = cab + `<div class="vacio">Todavía no guardaste picks. Abrí un partido, elegí un jugador en la tabla y tocá “Guardar en mi talón”.</div>`;
+    return;
+  }
+  const items = misPicks.map(k => {
+    const f = new Date(k.fecha);
+    return `<div class="talon-item">
+      <div class="quien"><b>${esc(k.jugador)}</b>
+        <div class="mercado">${esc(mercadoPick(k))}</div>
+        <div class="donde">${esc(k.equipo)} vs ${esc(k.rival)} · ${esc(k.liga)} · ${esc(fmtCorta.format(f))} ${esc(fmtHora.format(f))}</div></div>
+      <div class="tasa"><b>${k.pct != null ? Math.round(k.pct * 100) + "%" : "–"}</b>${k.sup} de ${k.n}<br>justa ${probAjustada(k) ? fmt2(1 / probAjustada(k)) : "–"}</div>
+      <label class="talon-cuota">Cuota<input type="text" inputmode="decimal" data-cuota="${esc(k.id)}" value="${esc(k.cuota ?? "")}" placeholder="2,10"></label>
+      <button class="talon-quitar" data-quitar="${esc(k.id)}" aria-label="Quitar ${esc(k.jugador)}">×</button>
+    </div>`;
+  }).join("");
+  cont.innerHTML = cab + `<div class="talon-lista">${items}</div>
+    <div class="talon-monto"><label for="montoTalon">Monto apostado</label>
+      <input id="montoTalon" type="number" min="0" step="100" value="${montoTalon}"></div>
+    <div class="talon-totales" id="talonTotales">${totalesTalonHTML()}</div>
+    <div class="talon-acciones"><button class="primario" data-copiar-talon>Copiar talón</button>
+      <button data-vaciar-talon>Vaciar</button></div>`;
+}
+
+function irATalon() {
+  verTalon = true; activo = null;
+  document.body.classList.add("ver-detalle");
+  pintarLista(); pintarDestacados(); pintarTalon();
+  if (esAngosto()) window.scrollTo({ top: 0 });
+}
 function picksEquipo(p, lado, forma, actual) {
   const teamId = lado === "home" ? p.homeId : p.awayId;
   const avisos = avisosEquipo(teamId, forma, actual, p.fecha, p.liga_nombre);
@@ -928,7 +1105,7 @@ async function pintarPicksPartido(p) {
 let genInicio = 0;
 async function pintarInicio() {
   const cont = esAngosto() ? $("picksMovil") : $("detalle");
-  if (!esAngosto() && activo) return;
+  if (verTalon || (!esAngosto() && activo)) return;
   const gen = ++genInicio;
   const ps = destacados(10).filter(p => p.estado === "pre");
   const cab = `<div class="inicio-cab"><div><h2>Picks del día</h2>
@@ -941,7 +1118,7 @@ async function pintarInicio() {
   const todos = [];
   let hechos = 0;
   const pintar = () => {
-    if (gen !== genInicio || (cont === $("detalle") && activo)) return;  // ya se abrió un partido: no pisar el detalle
+    if (gen !== genInicio || verTalon || (cont === $("detalle") && activo)) return;  // ya se abrió un partido o el talón: no pisar el detalle
     const orden = [...todos].sort((a, b) => b.r.pct - a.r.pct || b.r.n - a.r.n || b.r.prom - a.r.prom).slice(0, 12);
     cont.innerHTML = cab + (hechos < ps.length ? `<p class="sup progreso">Analizando partidos (${hechos} de ${ps.length})…</p>` : "")
       + (orden.length ? `<div class="picks-grid">${orden.map((k, i) => cardPick(k, i + 1, true)).join("")}</div>`
@@ -1083,6 +1260,7 @@ function cabecera(p) {
 }
 
 async function pintarDetalle() {
+  if (verTalon) { pintarTalon(); return; }
   const p = partidos.find(x => x.id === activo), det = $("detalle");
   if (!p) { pintarInicio(); return; }
   if (!vista.tab) vista.tab = p.estado === "pre" ? "previa" : "hechos";
@@ -1544,6 +1722,8 @@ async function pintarJugador(j) {
   const dibujar = (ps, cargandoOtros) => {
     const sel = filtrarPartidos(ps), r = resumenStat(sel);
     if (!sel.length) { cont.innerHTML = `<div><h3>${esc(j.nombre)}</h3></div><div class="vacio">No jugó partidos con estos filtros.</div>`; return; }
+    pickVisible = pickDesdeVista(j, r);
+    const guardado = pickVisible && misPicks.some(x => x.id === pickVisible.id);
     const angosto = window.matchMedia("(max-width: 760px)").matches;
     const { svg, orden } = graficoBarras(sel, angosto ? cont.clientWidth - 24 : cont.clientWidth - 284);
     const otros = sel.some(p => p.otroEquipo);
@@ -1558,6 +1738,8 @@ async function pintarJugador(j) {
           <div><div class="v">${r1(r.prom)}</div><div class="k">promedio</div></div>
           <div><div class="v">${Math.max(...sel.map(p => p.stats[vista.stat] ?? 0))}</div><div class="k">máximo</div></div>
         </div>
+        ${pickVisible ? `<button class="guardar-pick${guardado ? " on" : ""}" data-guardar-pick>${
+          guardado ? "✓ En mi talón" : "☆ Guardar en mi talón"}</button>` : ""}
       </div>
       <div>
         <p class="nota">${NOMBRE_STAT[vista.stat]} en sus últimos ${sel.length} partidos${vista.soloTitular ? " como titular" : ""}. ${nota}</p>
@@ -1643,6 +1825,20 @@ $("destacados").addEventListener("click", e => {
 });
 $("detalle").addEventListener("click", e => {
   if (e.target.closest("[data-volver]")) { volverALista(); return; }
+  if (e.target.closest("[data-guardar-pick]")) { alternarPickVisible(); return; }
+  const quitar = e.target.closest("[data-quitar]");
+  if (quitar) {
+    misPicks = misPicks.filter(x => x.id !== quitar.dataset.quitar);
+    guardarEnDisco(); actualizarCuentaTalon(); pintarTalon(); return;
+  }
+  const copiar = e.target.closest("[data-copiar-talon]");
+  if (copiar) { copiarTalon(copiar); return; }
+  if (e.target.closest("[data-vaciar-talon]")) {
+    if (confirm("¿Vaciar el talón? Se borran todos los picks guardados.")) {
+      misPicks = []; guardarEnDisco(); actualizarCuentaTalon(); pintarTalon();
+    }
+    return;
+  }
   const pk = e.target.closest(".pick");
   if (pk) { irAPick(pk); return; }
   const ficha = e.target.closest(".ficha");
@@ -1696,7 +1892,24 @@ $("picksMovil").addEventListener("change", e => {
   if (e.target.id === "iStat") vista.stat = e.target.value; else if (e.target.id === "iLinea") vista.linea = +e.target.value; else return;
   pintarInicio();
 });
+// los totales se recalculan sin repintar la lista, para no perder el foco mientras se escribe
+$("detalle").addEventListener("input", e => {
+  const id = e.target.dataset?.cuota;
+  if (id) {
+    const k = misPicks.find(x => x.id === id);
+    if (!k) return;
+    k.cuota = e.target.value;
+  } else if (e.target.id === "montoTalon") {
+    montoTalon = +e.target.value || 0;
+  } else return;
+  guardarEnDisco();
+  const tot = $("talonTotales");
+  if (tot) tot.innerHTML = totalesTalonHTML();
+});
+$("irTalon").addEventListener("click", irATalon);
+actualizarCuentaTalon();
 $("irInicio").addEventListener("click", () => {
+  verTalon = false;
   activo = null; document.body.classList.remove("ver-detalle");
   pintarLista(); pintarDestacados(); pintarDetalle();
   if (esAngosto()) window.scrollTo({ top: 0 });
