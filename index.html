@@ -204,6 +204,28 @@
   .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
   .leyenda .dash { width: 16px; height: 0; border-top: 2px dashed var(--text); border-radius: 0; vertical-align: 3px; }
 
+  /* ---------- claves para el partido ---------- */
+  .claves { border: 1px solid var(--acento); border-radius: 14px; background: var(--panel-2); margin: 0 0 16px; overflow: hidden; }
+  .claves-cab { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; padding: 12px 14px; cursor: pointer; text-align: left; }
+  .claves-cab .tit { font-weight: 800; font-size: 15px; white-space: nowrap; }
+  .claves-cab .sub { font-size: 11px; color: var(--text-2); line-height: 1.3; flex: 1; min-width: 0; }
+  .claves-cab .flecha { color: var(--text-2); transition: transform .2s; flex: none; }
+  .claves.plegada .flecha { transform: rotate(-90deg); }
+  .claves.plegada .claves-cuerpo { display: none; }
+  .claves-tira { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .claves-tira::-webkit-scrollbar { display: none; }
+  .clave { flex: 0 0 100%; scroll-snap-align: start; padding: 0 14px 4px; display: flex; flex-direction: column; }
+  .clave p { margin: 0 0 12px; line-height: 1.5; }
+  .clave .mercado { font-weight: 700; margin: auto 0 8px; }
+  .clave .pick-clave { background: var(--panel); border-radius: 10px; padding: 12px 14px; display: flex; justify-content: center; align-items: baseline;
+                       gap: 10px; flex-wrap: wrap; }
+  .clave .pick-clave b { font-size: 16px; font-weight: 600; }
+  .clave .pick-clave span { color: var(--acento); font-weight: 700; font-size: 13px; }
+  .claves-puntos { display: flex; justify-content: center; gap: 7px; padding: 10px 0 12px; }
+  .claves-puntos button { width: 8px; height: 8px; border-radius: 50%; border: 0; padding: 0; background: var(--miss); cursor: pointer; }
+  .claves-puntos button.on { background: var(--acento); }
+  .claves-nota { font-size: 11px; color: var(--text-2); text-align: center; padding: 0 14px 12px; margin: 0; }
+
   /* ---------- remates por jugador ---------- */
   .remates { --rem: #7F77DD; --rem-caja: #5148b5; max-width: 560px; margin: 0 auto; }
   .rem-eqs { display: flex; width: 100%; margin-bottom: 14px; }
@@ -1337,6 +1359,7 @@ function cabecera(p) {
         <div class="enc-eq">${escudo(p.logoV, "esc-grande")}<span>${esc(p.visitante)}</span></div>
       </div>
     </div>
+    <section id="claves"></section>
     <div class="tabs" role="tablist">
       ${jugado ? `<button role="tab" data-tab="hechos" class="${vista.tab === "hechos" ? "on" : ""}">Hechos</button>` : ""}
       <button role="tab" data-tab="previa" class="${vista.tab === "previa" ? "on" : ""}">Forma reciente</button>
@@ -1352,6 +1375,7 @@ async function pintarDetalle() {
   if (!vista.tab) vista.tab = p.estado === "pre" ? "previa" : "hechos";
   if (p.estado === "pre" && vista.tab !== "previa" && vista.tab !== "remates") vista.tab = "previa";
   det.innerHTML = cabecera(p) + `<div id="cuerpo"><div class="vacio">Cargando…</div></div>`;
+  pintarClaves(p);
   try {
     if (vista.tab === "remates") await pintarRemates(p);
     else if (vista.tab === "partido") await pintarStatsPartido(p);
@@ -1426,6 +1450,139 @@ async function pintarStatsPartido(p) {
   };
   $("cuerpo").innerHTML = [p.local, p.visitante].map(eq => tabla(eq, r.filas.filter(f => f.equipo === eq))).join("") +
     `<p class="nota" style="margin-top:12px">Los minutos son aproximados: salen de los cambios. ${p.estado === "in" ? "El partido sigue en juego; volvé a abrir esta pestaña para actualizar." : ""}</p>`;
+}
+
+// ---------- claves para el partido: tendencias de los últimos 10 partidos (reglas fijas, sin cuotas) ----------
+const CLAVES_N = 10, CLAVES_MIN = 0.65, CLAVE_PLEGADA = "laoficina-claves-plegada";
+const clavesCache = {};
+let clavesPlegada = false;
+try { clavesPlegada = localStorage.getItem(CLAVE_PLEGADA) === "1"; } catch {}
+const fmtL = l => r1(l).replace(",", ".");
+const prom = (xs) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
+
+// tasa ajustada por tamaño de muestra: 5 de 5 no vale más que 18 de 20
+const suav = (sup, n) => (sup + 1) / (n + 2);
+// Línea "Más de"/"Menos de" más exigente que igual se cumplió seguido; devuelve { dir, linea, sup, n, tasa }
+function mejorLinea(vals, lineas, umbral = 0.7) {
+  const n = vals.length, cands = [];
+  for (const l of lineas) {
+    const mas = vals.filter(v => v > l).length;
+    cands.push({ dir: "Más", linea: l, sup: mas, n, tasa: suav(mas, n) }, { dir: "Menos", linea: l, sup: n - mas, n, tasa: suav(n - mas, n) });
+  }
+  const masOk = cands.filter(c => c.dir === "Más" && c.tasa >= umbral).sort((x, y) => y.linea - x.linea)[0];
+  const menosOk = cands.filter(c => c.dir === "Menos" && c.tasa >= umbral).sort((x, y) => x.linea - y.linea)[0];
+  const ok = [masOk, menosOk].filter(Boolean).sort((x, y) => y.tasa - x.tasa)[0];
+  return ok || cands.sort((x, y) => y.tasa - x.tasa)[0];
+}
+
+function datosEquipoClaves(forma, teamId) {
+  const ps = forma.partidos.map(m => {
+    const gf = +(m.esLocal ? m.gl : m.gv), gc = +(m.esLocal ? m.gv : m.gl);
+    return { ...m, gf, gc, r: gf > gc ? "G" : gf < gc ? "P" : "E" };
+  }).filter(m => Number.isFinite(m.gf) && Number.isFinite(m.gc));
+  return { teamId, ps, n: ps.length, jugadores: forma.jugadores };
+}
+
+function calcularClaves(p, A, B) {
+  const claves = [], nA = A.n, nB = B.n, N = nA + nB;
+  const b = t => `<b>${esc(t)}</b>`;
+  // 1. Goles
+  { const tot = [...A.ps, ...B.ps].map(m => m.gf + m.gc);
+    const k = mejorLinea(tot, [1.5, 2.5, 3.5]);
+    const enA = A.ps.filter(m => (k.dir === "Más") === (m.gf + m.gc > k.linea)).length, enB = k.sup - enA;
+    const s = e => e.ps.reduce((x, m) => x + m.gf, 0), c = e => e.ps.reduce((x, m) => x + m.gc, 0);
+    claves.push({ tasa: k.tasa, mercado: "Goles · Más/Menos de", pick: `${k.dir} de ${fmtL(k.linea)}`, sup: k.sup, n: N,
+      texto: `${b(p.local)} anotó ${b(s(A))} goles y recibió ${b(c(A))} en sus últimos ${nA} partidos, mientras que ${b(p.visitante)} anotó ${b(s(B))} y recibió ${b(c(B))}. Hubo ${k.dir.toLowerCase()} de ${fmtL(k.linea)} goles en ${enA} partidos de ${esc(p.local)} y en ${enB} de ${esc(p.visitante)}.` });
+  }
+  // 2. Ambos marcan
+  { const ba = A.ps.filter(m => m.gf > 0 && m.gc > 0).length, bb = B.ps.filter(m => m.gf > 0 && m.gc > 0).length;
+    const si = (ba + bb) / N, sup = si >= 0.5 ? ba + bb : N - ba - bb;
+    claves.push({ tasa: suav(sup, N), mercado: "Ambos equipos marcan", pick: si >= 0.5 ? "Sí" : "No", sup, n: N,
+      texto: `Los dos equipos marcaron en ${b(ba)} de los últimos ${nA} partidos de ${esc(p.local)} y en ${b(bb)} de los ${nB} de ${esc(p.visitante)}.` });
+  }
+  // 3. Resultado (forma)
+  { const reg = e => ({ G: e.ps.filter(m => m.r === "G").length, E: e.ps.filter(m => m.r === "E").length, P: e.ps.filter(m => m.r === "P").length });
+    const ra = reg(A), rb = reg(B), pa = (3 * ra.G + ra.E) / nA, pb = (3 * rb.G + rb.E) / nB;
+    const [fav, dog, rf, rd, nf, nd] = pa >= pb ? [p.local, p.visitante, ra, rb, nA, nB] : [p.visitante, p.local, rb, ra, nB, nA];
+    const gana = (rf.G + rd.P) / N, noPierde = (rf.G + rf.E + rd.P + rd.E) / N;
+    const ganaFuerte = gana >= CLAVES_MIN;
+    const sup = ganaFuerte ? rf.G + rd.P : rf.G + rf.E + rd.P + rd.E;
+    claves.push({ tasa: suav(sup, N) - (ganaFuerte ? 0 : 0.1), mercado: ganaFuerte ? "Resultado final" : "Doble oportunidad",
+      pick: ganaFuerte ? `Gana ${fav}` : `${fav} o empate`, sup, n: N,
+      texto: `${b(p.local)} viene de ${ra.G} ganados, ${ra.E} empatados y ${ra.P} perdidos (${r1(pa)} puntos por partido); ${b(p.visitante)}, de ${rb.G}-${rb.E}-${rb.P} (${r1(pb)} por partido). ${esc(fav)} ganó ${rf.G} de ${nf} y ${esc(dog)} perdió ${rd.P} de ${nd}.` });
+  }
+  // 4. Amarillas
+  { const am = e => e.ps.map(m => (m.favor.amarillas || 0) + (m.contra.amarillas || 0));
+    const va = am(A), vb = am(B), k = mejorLinea([...va, ...vb], [2.5, 3.5, 4.5, 5.5, 6.5]);
+    if (va.some(Boolean) || vb.some(Boolean))
+      claves.push({ tasa: k.tasa, mercado: "Tarjetas amarillas · Más/Menos de", pick: `${k.dir} de ${fmtL(k.linea)}`, sup: k.sup, n: N,
+        texto: `En los partidos de ${b(p.local)} se vieron ${b(r1(prom(va)))} amarillas por partido y en los de ${b(p.visitante)}, ${b(r1(prom(vb)))}.` });
+  }
+  // 5. Remates al arco de cada equipo (lo que patea + lo que le patean al rival)
+  for (const [yo, rival, nombre, nombreRival] of [[A, B, p.local, p.visitante], [B, A, p.visitante, p.local]]) {
+    const propios = yo.ps.map(m => m.favor.tiros_al_arco || 0), recibe = rival.ps.map(m => m.contra.tiros_al_arco || 0);
+    if (!propios.some(Boolean)) continue;
+    const k = mejorLinea([...propios, ...recibe], [2.5, 3.5, 4.5, 5.5]);
+    if (k.dir !== "Más") continue;
+    claves.push({ tasa: k.tasa, mercado: `${nombre} · Remates al arco`, pick: `Más de ${fmtL(k.linea)}`, sup: k.sup, n: k.n,
+      texto: `${b(nombre)} promedia ${b(r1(prom(propios)))} remates al arco por partido y ${b(nombreRival)} recibe ${b(r1(prom(recibe)))}. Se superaron los ${fmtL(k.linea)} en ${k.sup} de esos ${k.n} partidos.` });
+  }
+  // 6. Jugadores: titular en el último partido, con 4+ de los últimos 5 jugados
+  const jugs = [];
+  for (const [e, nombreEq] of [[A, p.local], [B, p.visitante]]) {
+    const ultimo = e.ps[0]?.id, ultimos5 = new Set(e.ps.slice(0, 5).map(m => m.id));
+    for (const j of e.jugadores.values()) {
+      const pj = j.partidos.filter(x => ultimos5.has(x.eventId));
+      if (pj.length < 4 || !pj.some(x => x.eventId === ultimo && x.titular)) continue;
+      for (const [stat, linea, mercado] of [["tiros_al_arco", 0.5, "Remates al arco"], ["tiros", 1.5, "Remates totales"], ["faltas_recibidas", 1.5, "Faltas recibidas"]]) {
+        const sup = pj.filter(x => (x.stats[stat] || 0) > linea).length, tasa = suav(sup, pj.length);
+        if (sup / pj.length >= 0.75) jugs.push({ tasa, mercado: `${j.nombre} · ${mercado}`, pick: `Más de ${fmtL(linea)}`, sup, n: pj.length,
+          texto: `${b(j.nombre)} (${esc(nombreEq)}) fue titular en el último partido y superó ${fmtL(linea)} ${mercado.toLowerCase()} en ${b(sup)} de sus últimos ${pj.length} partidos (${pj.reduce((s, x) => s + (x.stats[stat] || 0), 0)} en total).` });
+      }
+    }
+  }
+  jugs.sort((x, y) => y.tasa - x.tasa || y.n - x.n);
+  const vistos = new Set();
+  claves.push(...jugs.filter(k => { const nom = k.mercado.split(" · ")[0]; if (vistos.has(nom)) return false; vistos.add(nom); return true; }).slice(0, 2));
+  return claves.filter(k => k.tasa >= CLAVES_MIN).sort((x, y) => y.tasa - x.tasa).slice(0, 5);
+}
+
+function clavesHTML(claves, nA, nB) {
+  const cuerpo = !claves.length
+    ? `<p class="claves-nota" style="padding-top:2px">No hay una tendencia clara en los últimos partidos de estos equipos.</p>`
+    : `<div class="claves-tira">${claves.map(k => `<div class="clave"><p>${k.texto}</p>
+        <div class="mercado">${esc(k.mercado)}</div>
+        <div class="pick-clave"><b>${esc(k.pick)}</b><span>se dio en ${k.sup} de ${k.n}</span></div></div>`).join("")}</div>
+      ${claves.length > 1 ? `<div class="claves-puntos">${claves.map((_, i) => `<button data-clave-ir="${i}" class="${i ? "" : "on"}" aria-label="Clave ${i + 1}"></button>`).join("")}</div>` : ""}
+      <p class="claves-nota">Tendencias de partidos anteriores, no son una garantía.</p>`;
+  return `<div class="claves${clavesPlegada ? " plegada" : ""}">
+    <button class="claves-cab" data-claves-plegar aria-expanded="${!clavesPlegada}">
+      <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1l1.6 4.4L14 7l-4.4 1.6L8 13l-1.6-4.4L2 7l4.4-1.6z" fill="var(--acento)"/></svg>
+      <span class="tit">Claves para el partido</span>
+      <span class="sub">Últimos ${Math.max(nA, nB)} partidos · ESPN</span>
+      <svg class="flecha" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button><div class="claves-cuerpo">${cuerpo}</div></div>`;
+}
+
+function activarClaves() {
+  const tira = document.querySelector("#claves .claves-tira"), puntos = document.querySelectorAll("#claves .claves-puntos button");
+  if (!tira || !puntos.length) return;
+  tira.addEventListener("scroll", () => {
+    const i = Math.round(tira.scrollLeft / tira.clientWidth);
+    puntos.forEach((b, j) => b.classList.toggle("on", i === j));
+  }, { passive: true });
+}
+
+async function pintarClaves(p) {
+  const pintar = html => { const c = $("claves"); if (c && activo === p.id) { c.innerHTML = html; activarClaves(); } };
+  const html = c => clavesHTML(c.claves, c.nA, c.nB);
+  if (clavesCache[p.id]) { pintar(html(clavesCache[p.id])); return; }
+  try {
+    const [fa, fb] = await Promise.all([formaEquipo(p.homeId, p.fecha, CLAVES_N), formaEquipo(p.awayId, p.fecha, CLAVES_N)]);
+    const A = datosEquipoClaves(fa, p.homeId), B = datosEquipoClaves(fb, p.awayId);
+    if (A.n < 5 || B.n < 5) return;
+    pintar(html(clavesCache[p.id] = { claves: calcularClaves(p, A, B), nA: A.n, nB: B.n }));
+  } catch { /* sin datos: la tarjeta no aparece */ }
 }
 
 // ---------- remates por jugador: últimos 3 partidos de cada equipo (todas las competiciones) ----------
@@ -2059,6 +2216,16 @@ $("detalle").addEventListener("click", e => {
   if (pk) { irAPick(pk); return; }
   const ficha = e.target.closest(".ficha");
   if (ficha) { elegirDesdeCancha(ficha); return; }
+  if (e.target.closest("[data-claves-plegar]")) {
+    clavesPlegada = !clavesPlegada;
+    try { localStorage.setItem(CLAVE_PLEGADA, clavesPlegada ? "1" : "0"); } catch {}
+    const c = $("detalle").querySelector(".claves");
+    c?.classList.toggle("plegada", clavesPlegada);
+    c?.querySelector("[data-claves-plegar]")?.setAttribute("aria-expanded", String(!clavesPlegada));
+    return;
+  }
+  const ir = e.target.closest("[data-clave-ir]");
+  if (ir) { const t = $("detalle").querySelector(".claves-tira"); t?.scrollTo({ left: t.clientWidth * +ir.dataset.claveIr, behavior: "smooth" }); return; }
   const rem = e.target.closest("[data-rem-lado], [data-rem-sel], [data-rem-volver], [data-rem-metrica]");
   if (rem) {
     const d = rem.dataset;
