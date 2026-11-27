@@ -203,6 +203,38 @@
   .leyenda { display: flex; gap: 16px; font-size: 12px; color: var(--text-2); margin: 0 0 4px; flex-wrap: wrap; }
   .leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
   .leyenda .dash { width: 16px; height: 0; border-top: 2px dashed var(--text); border-radius: 0; vertical-align: 3px; }
+
+  /* ---------- remates por jugador ---------- */
+  .remates { --rem: #7F77DD; --rem-caja: #5148b5; max-width: 560px; margin: 0 auto; }
+  .remates.arco { --rem: #1D9E75; --rem-caja: #12684d; }
+  .rem-eqs { display: flex; width: 100%; margin-bottom: 14px; }
+  .rem-eqs button { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rem-lista { display: flex; flex-direction: column; background: var(--panel-2); border-radius: 14px; overflow: hidden; }
+  .rem-partido { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; text-align: left;
+                 background: none; border: 0; border-bottom: 1px solid var(--border); padding: 12px 14px; cursor: pointer; width: 100%; }
+  .rem-partido:last-child { border-bottom: 0; }
+  .rem-partido:hover { background: var(--sel); }
+  .rem-partido b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rem-partido .meta { grid-column: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rem-partido .chev { grid-row: 1 / 3; grid-column: 2; display: flex; align-items: center; gap: 10px; color: var(--text-2); }
+  .rem-partido.suma b { color: var(--acento); }
+  .rem-res { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; color: #fff; }
+  .rem-res.G { background: #1f9d55; } .rem-res.E { background: #6b6b6b; } .rem-res.P { background: #d64545; }
+  .rem-volver { background: var(--panel-2); border: 0; border-radius: 999px; padding: 7px 14px; margin-bottom: 12px; cursor: pointer; font-weight: 600; }
+  .rem-titulo { font-weight: 700; margin: 0 0 2px; }
+  .rem-metricas { display: flex; width: 100%; margin: 12px 0 14px; }
+  .rem-metricas button { flex: 1 1 0; }
+  .remates .rem-metricas button.on { background: var(--rem); }
+  .rem-total { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; color: var(--text-2); font-size: 13px; }
+  .rem-total b { font: 800 34px/1 var(--display); color: var(--rem); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .rem-filas { display: flex; flex-direction: column; gap: 6px; }
+  .rem-fila { display: grid; grid-template-columns: minmax(0, 38%) 32px minmax(0, 1fr); gap: 8px; align-items: center; }
+  .rem-nombre { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .rem-caja { height: 26px; border-radius: 6px; background: var(--rem-caja); color: #fff; display: grid; place-items: center;
+              font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .rem-barra { height: 10px; border-radius: 5px; background: var(--rem); }
+  .rem-fila.cero .rem-nombre { color: var(--text-2); font-weight: 500; }
+  .rem-fila.cero .rem-caja { background: var(--miss); color: var(--text-2); }
   .chart { position: relative; }
   .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
   .chart text { fill: var(--text-2); font: 12px var(--ui); }
@@ -470,6 +502,9 @@
     tr.panel-fila td { max-width: calc(100vw - 32px); }
     table[data-tabla="plantel"] th { white-space: normal; }
     main { padding: 16px 14px 32px; }
+    /* cuatro pestañas en ~380 px sin scroll horizontal */
+    .tabs { gap: 14px; }
+    .tabs button { font-size: 13px; white-space: nowrap; }
   }
 </style>
 </head>
@@ -547,7 +582,8 @@ let partidos = [], activo = null;
 const resumenes = {}, equipos = {}, atletas = {};
 const vista = { tab: null, lado: "home", stat: "tiros", linea: 0.5, n: 10, soloTitular: false, jugador: null,
                 favorContra: "favor", sedeEq: "todos", rivalEq: "",
-                ordenPlantel: { col: "prom", asc: false }, ordenPartido: { col: "tiros", asc: false } };
+                ordenPlantel: { col: "prom", asc: false }, ordenPartido: { col: "tiros", asc: false },
+                remLado: "home", remSel: null, remMetrica: "tiros" };
 
 // ---------- red ----------
 async function getJSON(url, intentos = 3) {
@@ -733,7 +769,8 @@ function pintarDestacados() {
 
 function abrirPartido(id) {
   verTalon = false;
-  if (activo !== id) { vista.jugador = null; vista.lado = "home"; vista.tab = null; vista.rivalEq = ""; vista.sedeEq = "todos"; }
+  if (activo !== id) { vista.jugador = null; vista.lado = "home"; vista.tab = null; vista.rivalEq = ""; vista.sedeEq = "todos";
+                       vista.remLado = "home"; vista.remSel = null; }
   activo = id;
   if (!$("lista").querySelector(`.partido[data-id="${CSS.escape(id)}"]`)) { $("buscar").value = ""; $("filtroLiga").value = ""; }
   document.body.classList.add("ver-detalle");
@@ -834,7 +871,11 @@ function formaEquipo(teamId, antesDe, n) {
   return equipos[clave] ??= (async () => {
     const corte = new Date(antesDe).getTime();
     let previos = [];
-    const sch = await getJSON(`/sports/soccer/all/teams/${teamId}/schedule`);
+    let sch = await getJSON(`/sports/soccer/all/teams/${teamId}/schedule`);
+    // A algunos equipos (ej. São Paulo) ESPN les devuelve el calendario vacío si no se pide la temporada
+    if (!sch.requestedSeason && !(sch.events || []).length) {
+      sch = await getJSON(`/sports/soccer/all/teams/${teamId}/schedule?season=${new Date(antesDe).getUTCFullYear()}`);
+    }
     const agregar = s => previos.push(...(s.events || []).filter(e =>
       e.competitions?.[0]?.status?.type?.completed && new Date(e.date).getTime() < corte));
     agregar(sch);
@@ -1300,6 +1341,7 @@ function cabecera(p) {
       ${jugado ? `<button role="tab" data-tab="hechos" class="${vista.tab === "hechos" ? "on" : ""}">Hechos</button>` : ""}
       <button role="tab" data-tab="previa" class="${vista.tab === "previa" ? "on" : ""}">Forma reciente</button>
       ${jugado ? `<button role="tab" data-tab="partido" class="${vista.tab === "partido" ? "on" : ""}">Este partido</button>` : ""}
+      <button role="tab" data-tab="remates" class="${vista.tab === "remates" ? "on" : ""}">Remates</button>
     </div>`;
 }
 
@@ -1308,10 +1350,11 @@ async function pintarDetalle() {
   const p = partidos.find(x => x.id === activo), det = $("detalle");
   if (!p) { pintarInicio(); return; }
   if (!vista.tab) vista.tab = p.estado === "pre" ? "previa" : "hechos";
-  if (p.estado === "pre" && vista.tab !== "previa") vista.tab = "previa";
+  if (p.estado === "pre" && vista.tab !== "previa" && vista.tab !== "remates") vista.tab = "previa";
   det.innerHTML = cabecera(p) + `<div id="cuerpo"><div class="vacio">Cargando…</div></div>`;
   try {
-    if (vista.tab === "partido") await pintarStatsPartido(p);
+    if (vista.tab === "remates") await pintarRemates(p);
+    else if (vista.tab === "partido") await pintarStatsPartido(p);
     else if (vista.tab === "hechos") await pintarHechos(p);
     else await pintarPrevia(p);
   } catch (e) {
@@ -1383,6 +1426,78 @@ async function pintarStatsPartido(p) {
   };
   $("cuerpo").innerHTML = [p.local, p.visitante].map(eq => tabla(eq, r.filas.filter(f => f.equipo === eq))).join("") +
     `<p class="nota" style="margin-top:12px">Los minutos son aproximados: salen de los cambios. ${p.estado === "in" ? "El partido sigue en juego; volvé a abrir esta pestaña para actualizar." : ""}</p>`;
+}
+
+// ---------- remates por jugador: últimos 3 partidos de cada equipo (todas las competiciones) ----------
+const REM_N = 3;
+const NOMBRE_REM = { tiros: "Remates totales", tiros_al_arco: "Remates al arco" };
+const TEXTO_RES = { G: "Ganó", E: "Empató", P: "Perdió" };
+
+async function datosRemates(p, teamId) {
+  const forma = await formaEquipo(teamId, p.fecha, REM_N);
+  const rs = await Promise.all(forma.partidos.map(m => resumen(m.id).catch(() => null)));
+  return forma.partidos.map((m, i) => {
+    const propio = +(m.esLocal ? m.gl : m.gv), ajeno = +(m.esLocal ? m.gv : m.gl);
+    const jugadores = (rs[i]?.filas || []).filter(f => f.teamId === teamId)
+      .map(f => ({ id: f.athleteId, nombre: f.jugador, tiros: f.tiros || 0, tiros_al_arco: f.tiros_al_arco || 0 }));
+    return { ...m, r: propio > ajeno ? "G" : propio < ajeno ? "P" : "E", jugadores };
+  });
+}
+
+function sumarRemates(ps) {
+  const suma = new Map();
+  for (const m of ps) for (const j of m.jugadores) {
+    const s = suma.get(j.id) || suma.set(j.id, { id: j.id, nombre: j.nombre, tiros: 0, tiros_al_arco: 0 }).get(j.id);
+    s.tiros += j.tiros; s.tiros_al_arco += j.tiros_al_arco;
+  }
+  return [...suma.values()];
+}
+
+function listaRematesHTML(jugadores, metrica) {
+  const orden = [...jugadores].sort((a, b) => b[metrica] - a[metrica] || a.nombre.localeCompare(b.nombre));
+  const max = Math.max(1, ...orden.map(j => j[metrica]));
+  const total = orden.reduce((s, j) => s + j[metrica], 0);
+  if (!orden.length) return `<div class="vacio">ESPN no publicó estadísticas por jugador para este partido.</div>`;
+  return `<div class="rem-total"><b>${total}</b>${esc(NOMBRE_REM[metrica].toLowerCase())} del equipo</div>
+    <div class="rem-filas">${orden.map(j => {
+      const v = j[metrica];
+      return `<div class="rem-fila${v ? "" : " cero"}"><span class="rem-nombre">${esc(j.nombre)}</span><span class="rem-caja">${v}</span>
+        <span>${v ? `<div class="rem-barra" style="width:${(v / max * 100).toFixed(1)}%"></div>` : ""}</span></div>`;
+    }).join("")}</div>`;
+}
+
+async function pintarRemates(p) {
+  const lado = vista.remLado, teamId = lado === "home" ? p.homeId : p.awayId;
+  const nombreEq = lado === "home" ? p.local : p.visitante;
+  const cab = `<div class="seg rem-eqs" role="tablist" aria-label="Equipo">
+      <button role="tab" data-rem-lado="home" class="${lado === "home" ? "on" : ""}">${esc(p.local)}</button>
+      <button role="tab" data-rem-lado="away" class="${lado === "away" ? "on" : ""}">${esc(p.visitante)}</button></div>`;
+  const cuerpo = () => $("cuerpo");
+  if (cuerpo().querySelector(".remates")?.dataset.lado !== lado) cuerpo().innerHTML = `<section class="remates" data-lado="${lado}">${cab}<div class="vacio">Trayendo los últimos partidos de ${esc(nombreEq)}…</div></section>`;
+  const ps = await datosRemates(p, teamId);
+  if (activo !== p.id || vista.tab !== "remates" || vista.remLado !== lado) return;
+  const metrica = vista.remMetrica, sel = vista.remSel;
+  let html;
+  if (!ps.length) {
+    html = `<div class="vacio">ESPN no tiene partidos anteriores de ${esc(nombreEq)}.</div>`;
+  } else if (sel == null || (sel !== "suma" && !ps[sel])) {
+    html = `<div class="rem-lista">${ps.map((m, i) => `<button class="rem-partido" data-rem-sel="${i}">
+        <b>${esc(m.local)} ${esc(m.gl)} - ${esc(m.gv)} ${esc(m.visitante)}</b>
+        <span class="meta">${fmtLarga.format(new Date(m.fecha))} · ${m.esLocal ? "Local" : "Visitante"} · ${esc(m.comp)}</span>
+        <span class="chev"><span class="rem-res ${m.r}">${TEXTO_RES[m.r]}</span>›</span></button>`).join("")}
+      <button class="rem-partido suma" data-rem-sel="suma"><b>Los ${ps.length} partidos sumados</b>
+        <span class="meta">Suma por jugador</span><span class="chev">›</span></button></div>`;
+  } else {
+    const m = sel === "suma" ? null : ps[sel];
+    const titulo = m ? `<p class="rem-titulo">${esc(m.local)} ${esc(m.gl)} - ${esc(m.gv)} ${esc(m.visitante)}</p>
+        <div class="meta">${esc(m.comp)} · ${fmtLarga.format(new Date(m.fecha))} · ${m.esLocal ? "Local" : "Visitante"} · ${TEXTO_RES[m.r]}</div>`
+      : `<p class="rem-titulo">Los ${ps.length} partidos sumados</p><div class="meta">${esc(nombreEq)} · suma por jugador</div>`;
+    html = `<button class="rem-volver" data-rem-volver>← Partidos</button>${titulo}
+      <div class="seg rem-metricas" role="group" aria-label="Métrica">
+        ${Object.entries(NOMBRE_REM).map(([k, t]) => `<button data-rem-metrica="${k}" class="${k === metrica ? "on" : ""}">${t}</button>`).join("")}</div>
+      ${listaRematesHTML(m ? m.jugadores : sumarRemates(ps), metrica)}`;
+  }
+  cuerpo().innerHTML = `<section class="remates${metrica === "tiros_al_arco" ? " arco" : ""}" data-lado="${lado}">${cab}${html}</section>`;
 }
 
 function filtrosHTML(p) {
@@ -1930,6 +2045,17 @@ $("detalle").addEventListener("click", e => {
   if (pk) { irAPick(pk); return; }
   const ficha = e.target.closest(".ficha");
   if (ficha) { elegirDesdeCancha(ficha); return; }
+  const rem = e.target.closest("[data-rem-lado], [data-rem-sel], [data-rem-volver], [data-rem-metrica]");
+  if (rem) {
+    const d = rem.dataset;
+    if (d.remLado) { vista.remLado = d.remLado; vista.remSel = null; }
+    else if (d.remSel) vista.remSel = d.remSel === "suma" ? "suma" : +d.remSel;
+    else if (d.remMetrica) vista.remMetrica = d.remMetrica;
+    else vista.remSel = null;
+    const p = partidos.find(x => x.id === activo);
+    if (p) pintarRemates(p).catch(() => { $("cuerpo").innerHTML = `<div class="vacio">ESPN no respondió. Revisá tu conexión y volvé a elegir el partido.</div>`; });
+    return;
+  }
   const tab = e.target.closest("[data-tab]");
   if (tab) { vista.tab = tab.dataset.tab; pintarDetalle(); return; }
   const lado = e.target.closest("[data-lado]");
