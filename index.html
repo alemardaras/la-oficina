@@ -411,6 +411,30 @@
   .estado-xi.conf { background: var(--acento); color: #fff; }
   .estado-xi.prob { background: var(--amarilla); color: #1a1a1a; }
   .dudas { display: block; color: var(--live); font-weight: 600; margin: 2px 0 4px; }
+  /* fichas HTML sobre la cancha: foto redonda, nombre siempre debajo */
+  .campo-wrap { position: relative; container-type: inline-size; }
+  .fichas { position: absolute; inset: 0; }
+  .ficha { position: absolute; --f: clamp(28px, 5.2cqw, 54px);
+           transform: translate(-50%, calc(var(--f) / -2)); display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+  .campo-wrap.medio .ficha { --f: clamp(34px, 11cqw, 60px); }
+  .ficha.sin-datos { cursor: default; }
+  .ficha:focus-visible { outline: none; }
+  .ficha .foto { position: relative; width: var(--f); height: var(--f); border-radius: 50%; background: var(--eq); border: 2px solid #f7f9f4;
+                 overflow: hidden; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0, 0, 0, .45); flex: none; }
+  .ficha .foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--eq); }
+  .ficha .dorsal { color: var(--eq-txt); font-weight: 800; font-size: calc(var(--f) * .4); }
+  .ficha.sel .foto { outline: 3px solid var(--amarilla); outline-offset: 2px; }
+  .ficha:focus-visible .foto { outline: 2px dashed var(--amarilla); outline-offset: 2px; }
+  .ficha .nombre { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 700;
+                   font-size: clamp(10px, 1.35cqw, 13px); line-height: 1.35; padding: 0 5px; border-radius: 5px; background: rgba(6, 20, 10, .62); }
+  .campo-wrap.medio .ficha .nombre { font-size: clamp(10px, 3.1cqw, 13px); }
+  .ficha .pct-xi { position: absolute; top: -4px; left: calc(50% - var(--f) / 2 - 10px); font-size: 10.5px; font-weight: 800; line-height: 16px;
+                   color: #fff; background: rgba(8, 24, 12, .88); padding: 0 5px; border-radius: 999px; }
+  .ficha .pct-xi.alta { background: var(--acento); }
+  .ficha .marca { position: absolute; top: -4px; left: calc(50% + var(--f) / 2 - 8px); width: 17px; height: 17px; border-radius: 50%;
+                  display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; border: 1.5px solid #f7f9f4; }
+  .ficha .m-baja, .ficha .m-susp { background: var(--live); }
+  .ficha .m-rotar, .ficha .m-banco { background: #c98a00; }
   .campo .marca circle { stroke: #f7f9f4; stroke-width: 1.5; }
   .campo .marca text { fill: #fff; stroke: none; font-weight: 800; }
   .campo .m-baja circle, .campo .m-susp circle { fill: var(--live); }
@@ -1803,6 +1827,97 @@ async function pintarPrevia(p) {
 
 // ---------- alineaciones en la cancha ----------
 // Profundidad (0 = arco propio) y costado (-1 izquierda … 1 derecha) según la posición de ESPN.
+// ---------- 365Scores: alineaciones (confirmadas o probables), fotos y lesionados ----------
+// Se usa junto con ESPN: el partido se busca por horario y nombres de los equipos.
+const API365 = "https://webws.365scores.com/web";
+const Q365 = "appTypeId=5&timezoneName=UTC&userCountryId=10";
+const dias365 = {}, juegos365 = {};
+const foto365 = (aid, v) => `https://imagecache.365scores.com/image/upload/f_png,w_96,h_96,c_limit,q_auto:eco,dpr_2,d_Athletes:default.png,r_max,c_thumb,g_face,z_0.65/v${v || 1}/Athletes/${aid}`;
+const fotoESPN = id => /^\d+$/.test(String(id)) ? `https://a.espncdn.com/i/headshots/soccer/players/full/${id}.png` : null;
+const RELLENO_EQ = new Set(["fc", "cf", "sc", "ac", "afc", "cd", "ca", "club", "de", "the", "sv", "fk", "sk", "if", "bk", "as", "us", "ss", "calcio", "cp", "rc", "vfb", "vfl", "tsg", "spvgg"]);
+const tokensEq = s => norm(s).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(t => t && !RELLENO_EQ.has(t) && !/^\d+$/.test(t));
+function simEquipo(a, b) {
+  const A = tokensEq(a), B = tokensEq(b);
+  if (!A.length || !B.length) return 0;
+  const ca = A.join(""), cb = B.join("");
+  if (ca === cb) return 1;
+  if (ca.length >= 4 && cb.length >= 4 && (ca.includes(cb) || cb.includes(ca))) return 0.85;
+  const comun = A.filter(t => B.some(u => u === t || (t.length >= 4 && u.length >= 4 && (u.startsWith(t) || t.startsWith(u))))).length;
+  return comun / Math.max(A.length, B.length);
+}
+function dia365(fecha) {
+  const d = new Date(fecha), dd = n => String(n).padStart(2, "0");
+  const s = `${dd(d.getUTCDate())}/${dd(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
+  return dias365[s] ??= getJSON(`${API365}/games/?${Q365}&langId=1&sports=1&startDate=${s}&endDate=${s}&showOdds=false`)
+    .then(r => r.games || []).catch(e => { delete dias365[s]; throw e; });
+}
+// Devuelve { game, invertido } o null. Si el partido no terminó, el detalle se vuelve a pedir a los 2 minutos.
+function juego365(p) {
+  return juegos365[p.id] ??= (async () => {
+    const t = new Date(p.fecha).getTime();
+    let mejor = null;
+    for (const g of await dia365(p.fecha)) {
+      const dt = Math.abs(new Date(g.startTime).getTime() - t) / 6e4;
+      if (dt > 30) continue;
+      const h = simEquipo(p.local, g.homeCompetitor?.name), a = simEquipo(p.visitante, g.awayCompetitor?.name);
+      const hx = simEquipo(p.local, g.awayCompetitor?.name), ax = simEquipo(p.visitante, g.homeCompetitor?.name);
+      const [suma, invertido] = h + a >= hx + ax ? [h + a, false] : [hx + ax, true];
+      if (suma < 0.8) continue;
+      const puntaje = suma - dt / 100;
+      if (!mejor || puntaje > mejor.puntaje) mejor = { g, puntaje, invertido };
+    }
+    if (!mejor) return null;
+    const d = await getJSON(`${API365}/game/?${Q365}&langId=29&gameId=${mejor.g.id}`);
+    if (!d.game) return null;
+    if (d.game.statusGroup !== 4) setTimeout(() => delete juegos365[p.id], 120e3);
+    return { game: d.game, invertido: mejor.invertido };
+  })().catch(() => { delete juegos365[p.id]; return null; });
+}
+const MESES_EN = { january: "enero", february: "febrero", march: "marzo", april: "abril", may: "mayo", june: "junio", july: "julio",
+                   august: "agosto", september: "septiembre", october: "octubre", november: "noviembre", december: "diciembre" };
+const vueltaES = t => String(t || "").replace(/\bEarly\b/i, "principios de").replace(/\bMid\b/i, "mediados de").replace(/\bLate\b/i, "fines de")
+  .replace(/\b(january|february|march|april|may|june|july|august|september|october|november|december|enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\b/gi, m => MESES_EN[m.toLowerCase()] || m.toLowerCase()).trim();
+// Datos de un equipo del partido en 365Scores (esLocal: el local según ESPN)
+function lado365(j, esLocal) {
+  if (!j) return null;
+  const g = j.game, c = esLocal !== j.invertido ? g.homeCompetitor : g.awayCompetitor;
+  const info = new Map((g.members || []).map(m => [m.id, m]));
+  const persona = m => ({ nombre: m.name || "", corto: m.shortName || m.name || "", dorsal: m.jerseyNumber ?? null,
+                          foto: m.athleteId ? foto365(m.athleteId, m.imageVersion) : null });
+  const L = c?.lineups || {}, ms = (L.members || []).map(m => ({ ...m, ...persona(info.get(m.id) || {}) }));
+  const titulares = ms.filter(m => m.status === 1 && m.yardFormation).map(m => ({ ...m,
+    d: 0.03 + Math.min(100, Math.max(0, m.yardFormation.fieldLine ?? 0)) / 100 * 0.91,
+    t: 0.1 + Math.min(100, Math.max(0, m.yardFormation.fieldSide ?? 50)) / 100 * 0.8 }));
+  const ausentes = ms.filter(m => m.status === 3).map(m => ({ ...m,
+    motivo: m.injury?.reason || m.suspension?.reason || "Ausente", vuelta: vueltaES(m.injury?.expectedReturn) }));
+  const plantel = (g.members || []).filter(m => m.competitorId === c?.id).map(persona);
+  return { estado: L.status || "", confirmada: /^confirmad/i.test(L.status || ""), formacion: L.formation || null, titulares, ausentes, plantel };
+}
+// Busca el jugador de ESPN que corresponde a un nombre de 365Scores (o al revés)
+const tokNom = s => norm(s).replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean);
+function emparejar(nombre, corto, dorsal, candidatos) {
+  const A = tokNom(nombre), C = tokNom(corto), apC = C.at(-1);
+  let mejor = null, top = 0, empate = false;
+  for (const c of candidatos) {
+    const B = tokNom(c.nombre);
+    if (!B.length || !A.length) continue;
+    let s = 0;
+    if (A.join(" ") === B.join(" ")) s = 3;
+    else if (A.at(-1) === B.at(-1) && A[0][0] === B[0][0]) s = 2;
+    else if (A.at(-1) === B.at(-1) || (apC && apC.length > 2 && B.includes(apC)) || A.includes(B.at(-1))) s = 1.2;
+    else if (A.some(t => t.length > 3 && B.includes(t))) s = 0.8;
+    if (s && dorsal != null && c.dorsal != null && String(dorsal) === String(c.dorsal)) s += 0.5;
+    if (s > top) { top = s; mejor = c; empate = false; } else if (s && s === top) empate = true;
+  }
+  return top >= 0.8 && !(empate && top < 2) ? mejor : null;
+}
+// Fotos alternativas: si no carga la primera, prueba la siguiente; si no queda ninguna, queda el dorsal
+function fotoFalla(img) {
+  const alts = (img.dataset.alt || "").split(" ").filter(Boolean);
+  if (alts.length) { img.dataset.alt = alts.slice(1).join(" "); img.src = alts[0]; }
+  else img.remove();
+}
+
 function profundidad(pos = "") {
   if (pos === "G") return 0;
   if (/^(CD|SW)/.test(pos)) return 1;
@@ -1865,31 +1980,50 @@ function coloresEquipos(colA, colB) {
   return [a, candidatos.find(c => lejos(c, a)) || "f7f9f4"];
 }
 
-async function datosXI(p, teamId, forma, actual, avisos) {
-  let xi = (actual?.convocados?.[teamId] || []).filter(j => j.titular);
-  let formacion = actual?.formaciones?.[teamId], fuente = "confirmada", confirmada = xi.length >= 11;
+async function datosXI(p, teamId, forma, actual, avisos, l365) {
+  // candidatos de ESPN para emparejar nombres de 365Scores (con id de ESPN = stats y avisos)
+  const conv = actual?.convocados?.[teamId] || [];
+  const candidatos = [...conv, ...[...forma.jugadores.values()].filter(j => !conv.some(c => c.id === j.id))];
+  let xi = conv.filter(j => j.titular);
+  let formacion = actual?.formaciones?.[teamId], fuente = "ESPN", confirmada = xi.length >= 11, ubicadoYa = false;
+  if (xi.length < 11 && l365?.titulares.length >= 11) {
+    // 365Scores publica la alineación confirmada antes que ESPN, y una probable días antes
+    xi = l365.titulares.map(t => {
+      const e = emparejar(t.nombre, t.corto, t.dorsal, candidatos);
+      return { id: e?.id ?? `s365-${t.nombre}`, espn: !!e, nombre: e?.nombre || t.nombre, corto: t.corto, pos: e?.pos, titular: true,
+               dorsal: t.dorsal ?? e?.dorsal, camiseta: e?.camiseta || null, foto: t.foto, d: t.d, t: t.t };
+    });
+    formacion = l365.formacion; confirmada = l365.confirmada; ubicadoYa = true;
+    fuente = confirmada ? "365Scores" : "alineación probable de 365Scores";
+  }
   if (xi.length < 11 && forma.partidos.length) {
     // el último partido con alineación publicada; los amistosos (que ESPN a veces no detalla) solo si no hay otro
     const recientes = forma.partidos.slice(0, 6);
-    const candidatos = [...recientes.filter(m => !/friendl|amistos/i.test(m.comp)), ...recientes.filter(m => /friendl|amistos/i.test(m.comp))];
-    for (const ult of candidatos) {
+    const cands = [...recientes.filter(m => !/friendl|amistos/i.test(m.comp)), ...recientes.filter(m => /friendl|amistos/i.test(m.comp))];
+    for (const ult of cands) {
       const r = await resumen(ult.id).catch(() => null);
       const t = (r?.convocados?.[teamId] || []).filter(j => j.titular);
       if (t.length < 11) continue;
       xi = t; formacion = r.formaciones[teamId];
       const rival = ult.homeId === teamId ? ult.visitante : ult.local;
       fuente = `último 11 inicial con datos, contra ${rival} el ${fmtCorta.format(new Date(ult.fecha))}`
-        + (ult.id !== forma.partidos[0].id ? ` (del partido más reciente, ${fmtCorta.format(new Date(forma.partidos[0].fecha))}, ESPN no tiene alineación)` : "");
+        + (ult.id !== forma.partidos[0].id ? ` (del partido más reciente, ${fmtCorta.format(new Date(forma.partidos[0].fecha))}, ESPN no tiene alineación)` : "")
+        + ", hasta que se publique la de hoy";
       break;
     }
   }
   if (xi.length < 11) return null;
+  // fotos: la de 365Scores si se encuentra al jugador; si no, la de ESPN
+  if (!ubicadoYa) xi = xi.map(j => {
+    const m = l365 ? emparejar(j.nombre, j.corto, j.dorsal, l365.plantel) : null;
+    return { ...j, espn: true, foto: m?.foto || null };
+  });
   const stats = j => {
-    const jj = forma.jugadores.get(j.id);
+    const jj = j.espn ? forma.jugadores.get(j.id) : null;
     return jj ? resumenStat(filtrarPartidos(jj.partidos)) : null;
   };
   const dudas = [];
-  const ubicados = ubicarXI(xi, formacion).map(j => {
+  const ubicados = (ubicadoYa ? xi : ubicarXI(xi, formacion)).map(j => {
     const av = (avisos?.get(j.id) || []).find(a => a.tipo !== "hoy" && a.tipo !== "volvio");
     if (av && !confirmada) dudas.push(`${j.corto} (${NOMBRE_AVISO[av.tipo].toLowerCase()})`);
     return { ...j, est: stats(j), aviso: av };
@@ -1920,40 +2054,27 @@ function lineasCancha(W, H, medio) {
 // ESPN arma la camiseta del equipo con el dorsal; el combiner la devuelve liviana (6 KB en vez de 240 KB).
 const urlCamiseta = (href, w = 120) => href ? `https://a.espncdn.com/combiner/i?img=${encodeURIComponent(href)}&w=${w}` : "";
 
-function fichaJugador(j, x, y, color, lado, escala, W, arriba = false) {
-  const tc = colorTexto(color), sel = j.id === vista.jugador;
-  const pct = j.est?.pct != null ? Math.round(j.est.pct * 100) : null;
-  const r = 23 * escala, f = 15 * escala;
-  // nombres cerca del borde: alineados hacia adentro para que no se corten
-  const borde = 70 * escala;
-  const [tx, ancla] = x < borde ? [Math.max(8, x - r), "start"] : x > W - borde ? [Math.min(W - 8, x + r), "end"] : [x, "middle"];
-  const yNombre = arriba ? y - r - (pct != null ? 24 : 6) * escala : y + r + 16 * escala;
-  const yPct = arriba ? y - r - 5 * escala : y + r + 33 * escala;
-  const cuerpo = j.camiseta
-    ? `<image class="camiseta" href="${esc(urlCamiseta(j.camiseta))}" x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" preserveAspectRatio="xMidYMid meet"/>`
-    : `<circle cx="${x}" cy="${y}" r="${r * 0.85}" fill="#${color}" stroke="#f7f9f4" stroke-width="${2.5 * escala}"/>
-       <text x="${x}" y="${y + 5 * escala}" text-anchor="middle" class="dorsal" style="fill:${tc};font-size:${f}px">${esc(j.dorsal ?? "")}</text>`;
-  let pildora = "";
-  if (pct != null) {
-    const txt = `${pct}%`, w = (txt.length * 7.6 + 12) * escala, h = 18 * escala;
-    const px = ancla === "middle" ? tx - w / 2 : ancla === "start" ? tx : tx - w;
-    pildora = `<g class="pct-xi${pct >= 70 ? " alta" : ""}">
-      <rect x="${px}" y="${yPct - h + 4.5 * escala}" width="${w}" height="${h}" rx="${h / 2}"/>
-      <text x="${px + w / 2}" y="${yPct}" text-anchor="middle" style="font-size:${12.5 * escala}px">${txt}</text></g>`;
-  }
-  return `<g class="ficha${sel ? " sel" : ""}" data-xi="${esc(j.id)}" data-xi-lado="${lado}" tabindex="0" role="button" aria-label="${esc(j.nombre)}${pct != null ? `, ${pct}%` : ""}">
-    <circle class="aro" cx="${x}" cy="${y}" r="${r + 3 * escala}" stroke-width="${3 * escala}"/>
-    ${cuerpo}
-    <text x="${tx}" y="${yNombre}" text-anchor="${ancla}" class="nombre" style="font-size:${f}px">${esc(j.corto)}</text>
-    ${pildora}
-    ${j.aviso ? `<g class="marca m-${j.aviso.tipo}"><title>${esc(NOMBRE_AVISO[j.aviso.tipo])}: ${esc(j.aviso.texto)}</title>
-      <circle cx="${x + r * 0.72}" cy="${y - r * 0.72}" r="${8 * escala}"/>
-      <text x="${x + r * 0.72}" y="${y - r * 0.72 + 4 * escala}" text-anchor="middle" style="font-size:${11 * escala}px">${j.aviso.tipo === "rotar" ? "↻" : "!"}</text></g>` : ""}
-  </g>`;
+// Nombre para la cancha: el apellido ("J. Calleri" → "Calleri")
+const nombreCancha = j => String(j.corto || j.nombre || "").replace(/^(\p{Lu}\.\s*)+/u, "").trim() || j.nombre || "";
+
+// Ficha HTML sobre la cancha: foto (365Scores → ESPN → camiseta → dorsal), % arriba de la foto y nombre siempre abajo.
+// x, y en % del ancho y alto de la cancha.
+function fichaJugador(j, x, y, color, lado, ancho) {
+  const sel = j.id === vista.jugador, pct = j.est?.pct != null ? Math.round(j.est.pct * 100) : null;
+  const fuentes = [j.foto, fotoESPN(j.espn ? j.id : null), j.camiseta ? urlCamiseta(j.camiseta) : null].filter(Boolean);
+  const img = fuentes.length ? `<img src="${esc(fuentes[0])}" data-alt="${esc(fuentes.slice(1).join(" "))}" alt="" loading="lazy" decoding="async" onerror="fotoFalla(this)">` : "";
+  const clic = j.espn ? ` data-xi="${esc(j.id)}" data-xi-lado="${lado}" tabindex="0" role="button"` : "";
+  return `<div class="ficha${sel ? " sel" : ""}${j.espn ? "" : " sin-datos"}"${clic} style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%;width:${ancho.toFixed(2)}%"
+      aria-label="${esc(j.nombre)}${pct != null ? `, ${pct}%` : ""}" title="${esc(j.nombre)}">
+    <span class="foto" style="--eq:#${color};--eq-txt:${colorTexto(color)}"><span class="dorsal">${esc(j.dorsal ?? "")}</span>${img}</span>
+    ${pct != null ? `<span class="pct-xi${pct >= 70 ? " alta" : ""}">${pct}%</span>` : ""}
+    ${j.aviso ? `<span class="marca m-${j.aviso.tipo}" title="${esc(NOMBRE_AVISO[j.aviso.tipo])}: ${esc(j.aviso.texto)}">${j.aviso.tipo === "rotar" ? "↻" : "!"}</span>` : ""}
+    <span class="nombre">${esc(nombreCancha(j))}</span>
+  </div>`;
 }
 
 let tRefresco = null, avisosActuales = null;
-function programarRefresco(p, confirmadas) {
+function programarRefresco(p, confirmadas, previo = { h: false, a: false }) {
   clearTimeout(tRefresco); tRefresco = null;
   const faltan = new Date(p.fecha) - Date.now();
   // antes del partido, si falta alguna alineación, se vuelve a consultar ESPN cada 2 minutos
@@ -1963,13 +2084,30 @@ function programarRefresco(p, confirmadas) {
     delete resumenes[p.id];
     const r = await resumen(p.id).catch(() => null);
     const ok = id => (r?.convocados?.[id] || []).filter(j => j.titular).length >= 11;
+    const j = await juego365(p);  // el detalle de 365Scores se renueva solo cada 2 minutos
     if (activo !== p.id || vista.tab !== "previa") return;
-    if (ok(p.homeId) || ok(p.awayId)) pintarDetalle();  // salió una alineación: se repinta todo (tabla incluida)
-    else programarRefresco(p, false);
+    const h = ok(p.homeId) || !!lado365(j, true)?.confirmada, a = ok(p.awayId) || !!lado365(j, false)?.confirmada;
+    if ((h && !previo.h) || (a && !previo.a)) pintarDetalle();  // salió una alineación: se repinta todo (tabla incluida)
+    else programarRefresco(p, false, previo);
   }, 120e3);
 }
 
-function pintarAvisos(p, avh, ava) {
+// Suma los lesionados y suspendidos que publica 365Scores a los avisos deducidos de ESPN
+function sumarAusentes365(av, nomMap, l365, teamId, forma, actual) {
+  if (!l365?.ausentes.length) return;
+  const conv = actual?.convocados?.[teamId] || [];
+  const candidatos = [...conv, ...[...forma.jugadores.values()].filter(j => !conv.some(c => c.id === j.id))];
+  for (const a of l365.ausentes) {
+    const e = emparejar(a.nombre, a.corto, a.dorsal, candidatos);
+    const id = e?.id ?? `s365-${a.nombre}`;
+    if (!nomMap.has(id)) nomMap.set(id, a.nombre);
+    const v = a.vuelta.replace(/^about\s+/i, "unas ").replace(/\bweeks?\b/i, "semanas").replace(/\bdays?\b/i, "días").replace(/\bmonths?\b/i, "meses");
+    const texto = `${a.motivo}${v ? `. ${/\d|principios|mediados|fines|semanas|días|meses/.test(v) && !/^unas/.test(v) ? "Vuelve: " : ""}${/^unas/.test(v) ? "Vuelve en " : ""}${v}` : ""} (365Scores)`;
+    av.set(id, [{ tipo: "baja", texto }, ...(av.get(id) || []).filter(x => x.tipo !== "baja")]);
+  }
+}
+
+function pintarAvisos(p, avh, ava, con365 = false) {
   const cont = $("avisos");
   if (!cont) return;
   const bloque = (eq, av, nom) => {
@@ -1983,70 +2121,71 @@ function pintarAvisos(p, avh, ava) {
   const [eqs, avs, nms] = [[p.local, p.visitante], [avh.av, ava.av], [avh.nom, ava.nom]];
   const orden = esAngosto() ? (vista.lado === "home" ? [0] : [1]) : [0, 1];
   cont.innerHTML = `<h4>Avisos del plantel</h4><div class="avisos-grid">${orden.map(i => bloque(eqs[i], avs[i], nms[i])).join("")}</div>
-    <p class="nota">ESPN no publica lesionados de fútbol: estos avisos salen de las listas de convocados, los minutos y las tarjetas de los partidos anteriores. Confirmalo con las noticias antes de apostar.</p>`;
+    <p class="nota">${con365 ? "Las lesiones y suspensiones marcadas con (365Scores) vienen de 365Scores. El resto de los avisos sale" : "ESPN no publica lesionados de fútbol: estos avisos salen"} de las listas de convocados, los minutos y las tarjetas de los partidos anteriores. Confirmalo con las noticias antes de apostar.</p>`;
   avisosActuales = { partido: p.id, home: avh, away: ava };
 }
 
-// Dibuja las fichas de un equipo; si el nombre de un jugador se pisa con el de otro, lo pone arriba de su círculo.
-function fichasEquipo(ubicados, posicion, color, lado, escala, W) {
-  const r = 23 * escala, alto = 40 * escala;
-  const cajas = [], puestos = ubicados.map(j => ({ j, xy: posicion(j) })).sort((a, b) => a.j.d - b.j.d || a.j.t - b.j.t);
-  const choca = c => cajas.reduce((a, o) => a + Math.max(0, Math.min(c.x2, o.x2) - Math.max(c.x1, o.x1)) * Math.max(0, Math.min(c.y2, o.y2) - Math.max(c.y1, o.y1)), 0);
-  return puestos.map(({ j, xy: [x, y] }) => {
-    const w = Math.max(String(j.corto || "").length * 8.8 * escala, 44 * escala);
-    const abajo = { x1: x - w / 2, x2: x + w / 2, y1: y + r, y2: y + r + alto };
-    const encima = { x1: x - w / 2, x2: x + w / 2, y1: y - r - alto, y2: y - r };
-    const arriba = choca(encima) < choca(abajo);
-    cajas.push(arriba ? encima : abajo, { x1: x - r, x2: x + r, y1: y - r, y2: y + r });
-    return fichaJugador(j, x, y, color, lado, escala, W, arriba);
+// Cada nombre usa el ancho libre hasta el vecino más cercano de su misma línea (nada de nombres pisados).
+function fichasEquipo(ubicados, posicion, color, lado, medio) {
+  const ps = ubicados.map(j => ({ j, xy: posicion(j) }));
+  const [tope, piso] = medio ? [34, 15] : [13, 6];
+  return ps.map(({ j, xy: [x, y] }) => {
+    const gaps = ps.filter(o => o.j !== j && Math.abs(o.xy[1] - y) < 6).map(o => Math.abs(o.xy[0] - x));
+    const ancho = Math.max(piso, Math.min(tope, gaps.length ? Math.min(...gaps) * 0.94 : tope));
+    return fichaJugador(j, x, y, color, lado, ancho);
   }).join("");
 }
 
 async function pintarAlineacion(p) {
   const n = Math.max(vista.n, 10);
   try {
-    const [fh, fa, actual] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n), resumen(p.id).catch(() => null)]);
+    const [fh, fa, actual, j365] = await Promise.all([formaEquipo(p.homeId, p.fecha, n), formaEquipo(p.awayId, p.fecha, n),
+      resumen(p.id).catch(() => null), juego365(p)]);
+    const lh = lado365(j365, true), la = lado365(j365, false);
     const avh = avisosEquipo(p.homeId, fh, actual, p.fecha, p.liga_nombre), ava = avisosEquipo(p.awayId, fa, actual, p.fecha, p.liga_nombre);
-    const [xh, xa] = await Promise.all([datosXI(p, p.homeId, fh, actual, avh), datosXI(p, p.awayId, fa, actual, ava)]);
-    const cont = $("alineacion");
-    if (!cont || activo !== p.id) return;
     const nom = (teamId, forma) => {
       const m = new Map();
       for (const j of forma.jugadores.values()) m.set(j.id, j.nombre);
       for (const c of actual?.convocados?.[teamId] || []) if (!m.has(c.id)) m.set(c.id, c.nombre);
       return m;
     };
-    pintarAvisos(p, { av: avh, nom: nom(p.homeId, fh) }, { av: ava, nom: nom(p.awayId, fa) });
-    programarRefresco(p, !!(xh?.confirmada && xa?.confirmada));
+    const nh = nom(p.homeId, fh), na = nom(p.awayId, fa);
+    sumarAusentes365(avh, nh, lh, p.homeId, fh, actual); sumarAusentes365(ava, na, la, p.awayId, fa, actual);
+    const [xh, xa] = await Promise.all([datosXI(p, p.homeId, fh, actual, avh, lh), datosXI(p, p.awayId, fa, actual, ava, la)]);
+    const cont = $("alineacion");
+    if (!cont || activo !== p.id) return;
+    pintarAvisos(p, { av: avh, nom: nh }, { av: ava, nom: na }, !!j365);
+    programarRefresco(p, !!(xh?.confirmada && xa?.confirmada), { h: !!xh?.confirmada, a: !!xa?.confirmada });
     const [ch, ca] = coloresEquipos(actual?.colores?.[p.homeId], actual?.colores?.[p.awayId]);
     const stat = NOMBRE_STAT[vista.stat].toLowerCase();
     const nota = (nombre, x) => x ? `<span class="xi-nota"><span class="estado-xi ${x.confirmada ? "conf" : "prob"}">${x.confirmada ? "Confirmada" : "Probable"}</span>
-        <b>${esc(nombre)}</b>${x.formacion ? ` ${esc(x.formacion)}` : ""}${x.confirmada ? "" : `: ${esc(x.fuente)}, hasta que ESPN publique la de hoy`}
+        <b>${esc(nombre)}</b>${x.formacion ? ` ${esc(x.formacion)}` : ""} · ${esc(x.fuente)}
         ${x.dudas.length ? `<span class="dudas">En duda: ${esc(x.dudas.join(", "))}</span>` : ""}</span>`
                                   : `<span><b>${esc(nombre)}</b>: sin alineación disponible</span>`;
     let svg;
     if (esAngosto()) {  // celular: media cancha del equipo elegido
       const x = vista.lado === "home" ? xh : xa, color = vista.lado === "home" ? ch : ca;
       const W = 648, H = 820;
-      const fichas = x ? fichasEquipo(x.ubicados, j => [50 + j.t * (W - 100), H - 92 - j.d * (H - 200)], color, vista.lado, 1.4, W) : "";
-      svg = `<svg viewBox="0 0 ${W} ${H}" class="campo medio" role="group" aria-label="Alineación"><g class="tiza">${lineasCancha(W, H, true)}</g>${fichas}</svg>`;
+      const fichas = x ? fichasEquipo(x.ubicados, j => [(50 + j.t * (W - 100)) / W * 100, (H - 92 - j.d * (H - 200)) / H * 100], color, vista.lado, true) : "";
+      svg = `<div class="campo-wrap medio" role="group" aria-label="Alineación"><svg viewBox="0 0 ${W} ${H}" class="campo medio" aria-hidden="true"><g class="tiza">${lineasCancha(W, H, true)}</g></svg><div class="fichas">${fichas}</div></div>`;
       cont.innerHTML = `<h4>Alineación</h4>${svg}<div class="xi-notas">${nota(vista.lado === "home" ? p.local : p.visitante, x)}</div>`;
     } else {
       const W = 1000, H = 648;
-      const fh2 = xh ? fichasEquipo(xh.ubicados, j => [34 + j.d * 430, 52 + j.t * (H - 104)], ch, "home", 1, W) : "";
-      const fa2 = xa ? fichasEquipo(xa.ubicados, j => [W - 34 - j.d * 430, H - 52 - j.t * (H - 104)], ca, "away", 1, W) : "";
-      svg = `<svg viewBox="0 0 ${W} ${H}" class="campo" role="group" aria-label="Alineaciones"><g class="tiza">${lineasCancha(W, H, false)}</g>${fh2}${fa2}</svg>`;
+      const fh2 = xh ? fichasEquipo(xh.ubicados, j => [(34 + j.d * 430) / W * 100, (52 + j.t * (H - 104)) / H * 100], ch, "home") : "";
+      const fa2 = xa ? fichasEquipo(xa.ubicados, j => [(W - 34 - j.d * 430) / W * 100, (H - 52 - j.t * (H - 104)) / H * 100], ca, "away") : "";
+      svg = `<div class="campo-wrap" role="group" aria-label="Alineaciones"><svg viewBox="0 0 ${W} ${H}" class="campo" aria-hidden="true"><g class="tiza">${lineasCancha(W, H, false)}</g></svg><div class="fichas">${fh2}${fa2}</div></div>`;
       cont.innerHTML = `<h4>Alineaciones</h4>${svg}<div class="xi-notas">${nota(p.local, xh)}${nota(p.visitante, xa)}</div>`;
     }
     cont.querySelector(".xi-notas").insertAdjacentHTML("beforeend", `<span>El % es cuántas veces superó ${r1(vista.linea)} ${stat} en sus últimos ${vista.n} partidos con su equipo. Tocá un jugador para ver su gráfico.</span>`);
   } catch {
     const cont = $("alineacion");
-    if (cont) cont.innerHTML = `<h4>Alineaciones</h4><div class="vacio">No se pudo traer la alineación de ESPN.</div>`;
+    if (cont) cont.innerHTML = `<h4>Alineaciones</h4><div class="vacio">No se pudo traer la alineación de ESPN ni de 365Scores.</div>`;
   }
 }
 
 function elegirDesdeCancha(g) {
   const id = g.dataset.xi, lado = g.dataset.xiLado;
+  if (!id) return;
   if (lado !== vista.lado) { vista.lado = lado; vista.jugador = id; pintarDetalle(); return; }
   const fila = document.querySelector(`.jug[data-j="${CSS.escape(id)}"], tr.fila[data-j="${CSS.escape(id)}"]`);
   if (fila) elegirFila(fila); else { vista.jugador = id; pintarDetalle(); }
